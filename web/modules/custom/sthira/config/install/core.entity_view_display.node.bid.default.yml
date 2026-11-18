@@ -1,0 +1,73 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - node.type.bid
+  - field.field.node.bid.field_request
+  - field.field.node.bid.field_vendor
+  - field.field.node.bid.field_rate
+  - field.field.node.bid.field_lead_days
+  - field.field.node.bid.field_note
+  - field.field.node.bid.field_bid_status
+  module:
+  - options
+  - user
+  enforced:
+    module:
+    - sthira
+id: node.bid.default
+targetEntityType: node
+bundle: bid
+mode: default
+content:
+  field_request:
+    type: entity_reference_label
+    label: inline
+    settings: &id001
+      link: true
+    third_party_settings: {}
+    weight: 1
+    region: content
+  field_vendor:
+    type: entity_reference_label
+    label: inline
+    settings: *id001
+    third_party_settings: {}
+    weight: 2
+    region: content
+  field_rate:
+    type: number_integer
+    label: inline
+    settings: &id002
+      thousand_separator: ','
+      prefix_suffix: true
+    third_party_settings: {}
+    weight: 3
+    region: content
+  field_lead_days:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 4
+    region: content
+  field_note:
+    type: basic_string
+    label: inline
+    settings: {}
+    third_party_settings: {}
+    weight: 5
+    region: content
+  field_bid_status:
+    type: list_default
+    label: inline
+    settings: {}
+    third_party_settings: {}
+    weight: 6
+    region: content
+  links:
+    settings: {}
+    third_party_settings: {}
+    weight: 100
+    region: content
+hidden: {}

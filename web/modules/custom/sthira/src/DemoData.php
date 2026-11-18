@@ -19,16 +19,16 @@ class DemoData {
    * Public material descriptions (seeded into the material content type).
    */
   const ABOUT_MATERIAL = [
-    'OPC 53 Grade Cement' => 'Ordinary Portland Cement that reaches 53 MPa strength at 28 days. Used for RCC work such as slabs, beams, columns and foundations. Supplied in 50 kg bags.',
-    'TMT Steel Bars Fe500D' => 'Thermo-mechanically treated reinforcement bars (rebar, sariya) with 500 MPa yield strength. The D grade has higher ductility, which helps in earthquake zones. Used to reinforce concrete.',
+    'OPC 53 Grade Cement' => 'Ordinary Portland Cement that reaches 53 megapascals of strength at 28 days. Used for RCC work such as slabs, beams, columns and foundations. Supplied in 50 kg bags.',
+    'TMT Steel Bars Fe500D' => 'Thermo-mechanically treated reinforcement bars (rebar, sariya) with a yield strength of 500 megapascals. The D grade has higher ductility, which helps in earthquake zones. Used to reinforce concrete.',
     'M-Sand' => 'Manufactured sand made by crushing hard granite. A consistent, eco-friendly alternative to river sand for concrete and plaster.',
-    '20mm Coarse Aggregate' => 'Crushed stone (gravel, jelly, metal) graded to 20 mm, mixed with cement and sand to make concrete.',
-    'AAC Blocks 600×200×150' => 'Autoclaved Aerated Concrete blocks: lightweight, well insulated and quicker to lay than clay bricks. Used for internal and external masonry walls.',
+    'Coarse Aggregate (20 millimetres)' => 'Crushed stone (gravel, jelly, metal) graded to 20 millimetres, mixed with cement and sand to make concrete.',
+    'AAC Blocks (600 × 200 × 150 millimetres)' => 'Autoclaved Aerated Concrete blocks: lightweight, well insulated and quicker to lay than clay bricks. Used for internal and external masonry walls.',
     'Red Clay Bricks' => 'Traditional kiln-fired clay bricks for masonry walls and boundary walls.',
-    'FR Copper Wire 2.5 sq mm' => 'Flame-retardant PVC-insulated copper wire for power and lighting circuits in buildings. Supplied in 90 m coils.',
-    'CPVC Pipe 1" (3 m)' => 'Chlorinated PVC pipe for hot and cold water supply lines in bathrooms and kitchens.',
-    'Vitrified Tiles 600×600' => 'Low-porosity ceramic floor tiles; hard-wearing and stain resistant. Used for flooring in homes, offices and hospitals.',
-    'Exterior Emulsion 20 L' => 'Weather-resistant water-based paint for outside walls, protects against rain and sun.',
+    'Fire-Resistant Copper Wire (2.5 square millimetres)' => 'Flame-retardant PVC-insulated copper wire for power and lighting circuits in buildings. Supplied in 90 metre coils.',
+    'CPVC Pipe (1 inch, 3 metres long)' => 'Chlorinated PVC pipe for hot and cold water supply lines in bathrooms and kitchens.',
+    'Vitrified Tiles (600 × 600 millimetres)' => 'Low-porosity ceramic floor tiles; hard-wearing and stain resistant. Used for flooring in homes, offices and hospitals.',
+    'Exterior Emulsion Paint (20 litres)' => 'Weather-resistant water-based paint for outside walls, protects against rain and sun.',
   ];
 
   /**
@@ -39,8 +39,8 @@ class DemoData {
     ['Which documents do I need to register?', 'GST certificate, PAN card, a cancelled cheque for your bank account, and an MSME certificate if you have one. PDF or image files up to 5 MB each.', 'documents, papers, kyc, gst certificate, pan card, msme, cancelled cheque, upload'],
     ['How long does verification take?', 'Usually 1 to 2 working days. You can track the status in your vendor portal, and we email you when it is decided. If something is missing, we tell you what to fix and you can resubmit.', 'verification, approval, pending, status, rejected, how long, waiting'],
     ['When do suppliers get paid?', 'Within 30 days of a matched invoice. We check every invoice against the purchase order and what was actually delivered at site, then release payment for the quantity received.', 'payment, paid, pay, payment terms, credit period, money, invoice, settlement, dues'],
-    ['How do you choose a vendor?', 'Every order compares verified vendors on price, on-time delivery record and quality rating, and checks that the delivery time fits the date the site needs it. The best overall value wins, not just the lowest price.', 'choose, selection, criteria, win, lowest price, compare, quotation, bid, rfq, tender, l1'],
-    ['Where do I deliver materials?', 'To the project site named on the purchase order. The project manager at site records what arrives, and that delivery record is what your invoice is matched against.', 'deliver, delivery, dispatch, site address, transport, logistics, unloading'],
+    ['How do you choose a supplier?', 'Every requirement goes out for bids to the approved suppliers of that material. Each bid is scored on price, on-time delivery record and quality rating, and on whether it arrives before the site needs it. The best overall value wins, not just the lowest price. Every order is also approved by our Director before it is placed.', 'choose, selection, criteria, win, lowest price, compare, quotation, bid, bidding, rfq, tender, l1, auction'],
+    ['Where do I deliver materials?', 'To the project site named on the purchase order. Our procurement officer confirms what arrives at site, and that delivery record is what your invoice is matched against.', 'deliver, delivery, dispatch, site address, transport, logistics, unloading'],
     ['Can I update my rates?', 'Yes. Approved suppliers manage their own rates and lead times in the vendor portal, and the latest rates are used when we compare vendors for an order.', 'rates, price list, update price, change rate, lead time, quotation'],
     ['Do you work with small suppliers and MSMEs?', 'Yes. Any GST-registered business can register. MSME suppliers are welcome, and we follow the MSME payment timelines.', 'msme, small business, local supplier, new supplier, startup, trader, dealer'],
     ['Who do I contact about an order?', 'Your purchase order names the procurement officer handling it. You can also see every order and its delivery and payment status in your vendor portal.', 'contact, support, help, phone, email, order status, purchase order, po'],
@@ -99,14 +99,14 @@ class DemoData {
     $items = [
       1 => ['OPC 53 Grade Cement', 'Cement', 'bags', 420, 'cement,opc,ppc'],
       2 => ['TMT Steel Bars Fe500D', 'Steel', 'tonnes', 63500, 'steel,tmt,rebar,bars,sariya,saria,rods'],
-      3 => ['M-Sand', 'Aggregates', 'cu.m', 1550, 'sand,msand,m-sand'],
-      4 => ['20mm Coarse Aggregate', 'Aggregates', 'cu.m', 1350, 'aggregate,aggregates,gravel,jelly,metal,stone'],
-      5 => ['AAC Blocks 600×200×150', 'Bricks & Blocks', 'nos', 60, 'aac,block,blocks'],
-      6 => ['Red Clay Bricks', 'Bricks & Blocks', 'nos', 9, 'brick,bricks'],
-      7 => ['FR Copper Wire 2.5 sq mm', 'Electrical', 'coils', 2200, 'wire,wires,cable,cables,copper,wiring'],
-      8 => ['CPVC Pipe 1" (3 m)', 'Plumbing', 'pcs', 400, 'pipe,pipes,cpvc,pvc,plumbing'],
-      9 => ['Vitrified Tiles 600×600', 'Finishing', 'sq.ft', 50, 'tile,tiles,flooring,vitrified'],
-      10 => ['Exterior Emulsion 20 L', 'Finishing', 'buckets', 6400, 'paint,emulsion,painting'],
+      3 => ['M-Sand', 'Aggregates', 'cubic metres', 1550, 'sand,msand,m-sand'],
+      4 => ['Coarse Aggregate (20 millimetres)', 'Aggregates', 'cubic metres', 1350, 'aggregate,aggregates,gravel,jelly,metal,stone'],
+      5 => ['AAC Blocks (600 × 200 × 150 millimetres)', 'Bricks & Blocks', 'pieces', 60, 'aac,block,blocks'],
+      6 => ['Red Clay Bricks', 'Bricks & Blocks', 'pieces', 9, 'brick,bricks'],
+      7 => ['Fire-Resistant Copper Wire (2.5 square millimetres)', 'Electrical', 'coils', 2200, 'wire,wires,cable,cables,copper,wiring'],
+      8 => ['CPVC Pipe (1 inch, 3 metres long)', 'Plumbing', 'pieces', 400, 'pipe,pipes,cpvc,pvc,plumbing'],
+      9 => ['Vitrified Tiles (600 × 600 millimetres)', 'Finishing', 'square feet', 50, 'tile,tiles,flooring,vitrified'],
+      10 => ['Exterior Emulsion Paint (20 litres)', 'Finishing', 'buckets', 6400, 'paint,emulsion,painting'],
     ];
     $I = [];
     foreach ($items as $id => $i) {
@@ -131,6 +131,11 @@ class DemoData {
       9 => ['Prism Tiles & Paints', 'Kolkata', 'Finishing', 4.4, 87, 20, 70, 'Ritika Bose'],
       10 => ['National Cement Depot', 'Kolkata', 'Cement, Bricks & Blocks', 3.8, 68, 12, 40, 'Amit Ghosh'],
     ];
+    // Each supplier's login.
+    $logins = [
+      1 => $uids['balaji'], 2 => $uids['deccan'], 3 => $uids['konark'], 4 => $uids['mahalaxmi'], 5 => $uids['sai'],
+      6 => $uids['ecoblock'], 7 => $uids['brightline'], 8 => $uids['aquaflow'], 9 => $uids['prism'], 10 => $uids['national'],
+    ];
     $V = [];
     foreach ($vendors as $id => $v) {
       $V[$id] = $make('vendor', $v[0], [
@@ -142,7 +147,7 @@ class DemoData {
         'field_phone' => '+91 90000 000' . str_pad((string) $id, 2, '0', STR_PAD_LEFT),
         'field_pan' => 'DEMOP' . str_pad((string) $id, 4, '0', STR_PAD_LEFT) . 'X',
         'field_vendor_status' => 'approved',
-      ] + ($id === 1 ? ['field_vendor_user' => $uids['vendor']] : []), $id === 1 ? $uids['vendor'] : 1);
+      ] + (isset($logins[$id]) ? ['field_vendor_user' => $logins[$id]] : []), $logins[$id] ?? 1);
     }
     // A new supplier who registered yesterday and is waiting for verification.
     $sunrise = $nodes->create([
@@ -177,7 +182,7 @@ class DemoData {
       [9, 10, 6150, 4],
     ];
     foreach ($quotes as $q) {
-      $make('vendor_rate', $vendors[$q[0]][0] . ' · ' . $items[$q[1]][0], ['field_vendor' => $V[$q[0]], 'field_material' => $I[$q[1]], 'field_rate' => $q[2], 'field_lead_days' => $q[3]], $q[0] === 1 ? $uids['vendor'] : 1);
+      $make('vendor_rate', $vendors[$q[0]][0] . ' · ' . $items[$q[1]][0], ['field_vendor' => $V[$q[0]], 'field_material' => $I[$q[1]], 'field_rate' => $q[2], 'field_lead_days' => $q[3]], $logins[$q[0]] ?? 1);
     }
 
     // Stock at site: project, item, qty, daily use.
@@ -191,7 +196,8 @@ class DemoData {
     }
     $repo->reset();
 
-    // Requests: project, item, qty, stage, vendor, PO rate, hours ago (created), options.
+    // Requests: project, item, qty, stage, winning vendor, winning price,
+    // hours ago (created), options. Every order went out for bids first.
     $requests = [
       [1, 2, 20, 'paid', 3, 61800, 82 * 24, []],
       [1, 1, 600, 'paid', 1, 400, 75 * 24, []],
@@ -206,59 +212,81 @@ class DemoData {
       [1, 7, 40, 'paid', 7, 2120, 18 * 24, []],
       [2, 2, 15, 'paid', 3, 62400, 14 * 24, []],
       [1, 1, 800, 'paid', 1, 405, 10 * 24, []],
-      [2, 10, 40, 'rejected', NULL, NULL, 6 * 24 + 5, ['reject' => 'Finishing on this site starts only after the roof slab. Raise again in March.']],
-      [3, 8, 120, 'invoiced', 8, 385, 6 * 24, ['received' => 112, 'invoice_qty' => 120, 'invoice_no' => 'AQF/2026/1187']],
+      [3, 8, 120, 'invoiced', 8, 385, 6 * 24, ['received' => 112, 'invoice_qty' => 120, 'invoice_no' => 'AQF/2026/1187', 'by' => 'pm2']],
       [2, 4, 60, 'ordered', 5, 1290, 4 * 24, []],
       [1, 2, 12, 'received', 4, 66950, 3 * 24, ['priority' => 'urgent', 'note' => 'Emergency top-up for the 9th floor column casting. Konark could not deliver in time.']],
+      // Waiting for the Director: the winning bid is above the limit.
+      [2, 2, 25, 'director_review', 3, 62900, 40, ['note' => 'Raft foundation, grid C to F.']],
+      // Open for bids: Shree Balaji (Mahesh) has not bid yet.
+      [2, 1, 450, 'bidding', NULL, NULL, 20, ['note' => 'Plinth beams and ground-floor columns.']],
+      // Ready for bids.
       [1, 5, 8000, 'approved', NULL, NULL, 46, ['note' => 'Blockwork for floors 6 to 8.']],
-      [3, 7, 15, 'approved', NULL, NULL, 50, ['note' => 'Second-floor ward wiring.']],
-      [2, 2, 25, 'director_review', NULL, NULL, 30, ['pm_gap' => 4, 'note' => 'Raft foundation, grid C to F.']],
-      [1, 3, 20, 'approved', NULL, NULL, 5, ['raw' => 'Need 20 cu.m sand at Skyline by Thursday for plastering']],
+      [3, 7, 15, 'approved', NULL, NULL, 50, ['note' => 'Second-floor ward wiring.', 'by' => 'pm2']],
+      [1, 3, 20, 'approved', NULL, NULL, 5, ['raw' => 'Need 20 cubic metres of sand at Skyline by Thursday for plastering']],
     ];
     usort($requests, fn($a, $b) => $b[6] <=> $a[6]);
 
     $settings = \Drupal::config('sthira.settings');
-    $limit = (int) ($settings->get('pm_limit') ?: 50000);
+    $limit = 0;
     $pmFor = [1 => $uids['pm'], 2 => $uids['pm'], 3 => $uids['pm2']];
+    $loginFor = $logins;
+    $rateCard = [];
+    foreach ($quotes as $q) {
+      $rateCard[$q[1]][$q[0]] = [$q[2], $q[3]];
+    }
     $poCount = 0;
+    $flow = ['pm_review', 'approved', 'bidding', 'director_review', 'ordered', 'received', 'invoiced', 'paid'];
 
     foreach ($requests as [$pid, $itemId, $qty, $stage, $vendorId, $poRate, $hoursAgo, $opt]) {
       $item = $items[$itemId];
       $estAmount = (int) round($qty * $item[3]);
-      $needsDirector = $estAmount > $limit;
-      // Project managers raise requests for their own sites.
+      $poAmount = $poRate ? (int) round($qty * $poRate) : 0;
+      // The Director approves every order.
+      $needsDirector = TRUE;
       $by = isset($opt['by']) ? $uids[$opt['by']] : $pmFor[$pid];
       $t = $now - $hoursAgo * 3600 - 1800;
       $needed = date('Y-m-d', $t + 7 * 86400);
-      if (in_array($stage, ['pm_review', 'director_review', 'approved'], TRUE)) {
-        $needed = $d($stage === 'pm_review' && $hoursAgo < 24 ? 4 : 6);
+      if (in_array($stage, ['approved', 'bidding', 'director_review'], TRUE)) {
+        $needed = $d(6);
       }
+      $reached = array_search($stage, $flow, TRUE);
 
-      $flow = ['pm_review', 'director_review', 'approved', 'ordered', 'received', 'invoiced', 'paid'];
-      $reached = $stage === 'rejected' ? 0 : array_search($stage, $flow, TRUE);
-
-      // Event times.
-      // Raising is the PM's approval, so it happens at once.
-      $gaps = ['pm_approved' => 0.01, 'director_approved' => 6, 'po_issued' => 20, 'received' => 60, 'invoice_checked' => 20, 'paid' => 70];
-      $events = ['created' => $t];
-      $cursor = $t;
-      $plan = [];
-      if ($reached >= 1) {
-        $plan[] = 'pm_approved';
-      }
-      if ($reached >= 2 && $needsDirector) {
-        $plan[] = 'director_approved';
-      }
-      foreach (['po_issued' => 3, 'received' => 4, 'invoice_checked' => 5, 'paid' => 6] as $ev => $idx) {
-        if ($reached >= $idx) {
-          $plan[] = $ev;
+      // Who could bid: approved suppliers of this category.
+      $invited = [];
+      foreach ($vendors as $vid => $v) {
+        if (in_array($item[1], array_map('trim', explode(',', $v[2])), TRUE)) {
+          $invited[] = $vid;
         }
       }
-      foreach ($plan as $i => $ev) {
-        $cursor += $gaps[$ev] * 3600;
-        $latest = $now - (count($plan) - $i) * 2700;
-        $cursor = min($cursor, $latest);
+
+      // Event plan, hours after the previous event.
+      $plan = ['pm_approved' => 0.01];
+      if ($reached >= 2) {
+        $plan['bids_invited'] = 3;
+        $plan['bids'] = 6;
+      }
+      if ($reached >= 3) {
+        $plan['awarded'] = 18;
+      }
+      if ($reached >= 4) {
+        if ($needsDirector) {
+          $plan['director_approved'] = 5;
+        }
+        $plan['po_issued'] = 0.2;
+      }
+      foreach (['received' => [5, 60], 'invoice_checked' => [6, 20], 'paid' => [7, 70]] as $ev => [$idx, $gap]) {
+        if ($reached >= $idx) {
+          $plan[$ev] = $gap;
+        }
+      }
+      $events = ['created' => $t];
+      $cursor = $t;
+      $i = 0;
+      foreach ($plan as $ev => $gap) {
+        $cursor += $gap * 3600;
+        $cursor = min($cursor, $now - (count($plan) - $i) * 2700);
         $events[$ev] = $cursor;
+        $i++;
       }
 
       $values = [
@@ -276,25 +304,22 @@ class DemoData {
         'created_by' => $by,
         'created' => $t,
         'updated' => max($events),
+        'approved_pm' => $pmFor[$pid],
       ];
-      if (isset($events['pm_approved'])) {
-        $values['approved_pm'] = $pmFor[$pid];
+      if (isset($events['bids_invited'])) {
+        $values['invited'] = array_map(fn($vid) => $V[$vid], $invited);
+        $values['bids_opened'] = $events['bids_invited'];
+      }
+      if (isset($events['awarded'])) {
+        $values += ['vendor_id' => $V[$vendorId], 'po_rate' => $poRate, 'po_amount' => $poAmount, 'bids_closed' => $events['awarded'] - 1800];
       }
       if (isset($events['director_approved'])) {
         $values['approved_director'] = $uids['director'];
       }
-      if ($stage === 'rejected') {
-        $values['rejected_stage'] = 'director_review';
-        $values['approved_pm'] = $pmFor[$pid];
-        $values['updated'] = $t + 5 * 3600;
-      }
       if (isset($events['po_issued'])) {
         $poCount++;
         $values += [
-          'vendor_id' => $V[$vendorId],
           'po_number' => 'PO-' . date('Y') . '-' . str_pad((string) (100 + $poCount), 4, '0', STR_PAD_LEFT),
-          'po_rate' => $poRate,
-          'po_amount' => (int) round($qty * $poRate),
           'po_date' => $events['po_issued'],
         ];
       }
@@ -316,47 +341,63 @@ class DemoData {
 
       $rid = $repo->createRequest($values);
       $ref = 'MR-' . (1040 + $rid);
-      $project = $projects[$pid];
-      $short = trim(explode('–', $project[1])[0]);
-      $vendorName = $vendorId ? $vendors[$vendorId][0] : '';
+      $short = trim(explode('–', $projects[$pid][1])[0]);
       $unit = $item[2];
-
       $repo->log($rid, $by, 'created', 'Raised ' . $ref . ': ' . Format::qty($qty) . ' ' . $unit . ' of ' . $item[0] . ' for ' . $short . ' (est. ' . Format::inr($estAmount) . ')' . (!empty($opt['raw']) ? ' using AI assist' : '') . '.', $t);
-      if ($stage === 'rejected') {
-        $repo->log($rid, $pmFor[$pid], 'pm_approved', 'Approved on raising by the project manager. Above the ' . Format::inr($limit) . ' limit, so routed to the Director.', $t + 30);
-        $repo->log($rid, $uids['director'], 'rejected', 'Rejected by Director: ' . $opt['reject'], $t + 5 * 3600);
-        continue;
-      }
-      foreach ($events as $ev => $time) {
-        switch ($ev) {
-          case 'pm_approved':
-            $repo->log($rid, $pmFor[$pid], 'pm_approved', $needsDirector ? 'Approved on raising by the project manager. Above the ' . Format::inr($limit) . ' limit, so routed to the Director.' : 'Approved on raising: raised by the project manager, within the ' . Format::inr($limit) . ' limit.', $time);
-            break;
+      $repo->log($rid, $pmFor[$pid], 'pm_approved', 'Approved on raising: raised by the project manager.', $events['pm_approved']);
 
-          case 'director_approved':
-            $repo->log($rid, $uids['director'], 'director_approved', 'Approved by Director.', $time);
-            break;
-
-          case 'po_issued':
-            $repo->log($rid, $uids['procurement'], 'po_issued', $values['po_number'] . ' issued to ' . $vendorName . ' at ' . Format::inr($poRate) . '/' . Format::per($unit) . ' (' . Format::inr($values['po_amount']) . ').', $time);
-            break;
-
-          case 'received':
-            $repo->log($rid, $pmFor[$pid], 'received', 'Delivery recorded: ' . Format::qty($values['received_qty']) . ' ' . $unit . ' received at site.', $time);
-            break;
-
-          case 'invoice_checked':
-            $repo->log($rid, $uids['procurement'], 'invoice_checked', 'Invoice ' . $values['invoice_no'] . ' checked against PO and delivery: ' . ($values['match_status'] === 'matched' ? '3-way match OK.' : 'mismatch found.'), $time);
-            break;
-
-          case 'paid':
-            $repo->log($rid, $uids['procurement'], 'paid', 'Payment of ' . Format::inr($values['paid_amount']) . ' released to ' . $vendorName . '.', $time);
-            break;
+      if (isset($events['bids_invited'])) {
+        $names = array_map(fn($vid) => $vendors[$vid][0], $invited);
+        $repo->log($rid, $uids['procurement'], 'bids_invited', 'Invited ' . count($names) . ' suppliers to bid: ' . implode(', ', $names) . '.', $events['bids_invited']);
+        // Bids. In the open request, suppliers with a login have not bid yet.
+        $winnerBid = NULL;
+        foreach ($invited as $k => $vid) {
+          // The open cement request: Shree Balaji (Mahesh) has not bid yet.
+          if ($stage === 'bidding' && $vid === 1) {
+            continue;
+          }
+          [$base, $lead] = $rateCard[$itemId][$vid] ?? [$item[3], 5];
+          $seed = crc32($rid . '-' . $vid);
+          if ($vid === $vendorId) {
+            $rate = $poRate;
+          }
+          else {
+            $rate = $base * (1 + (($seed % 7) - 3) / 100);
+            if ($poRate) {
+              // Losing bids came in above the winner.
+              $rate = max($rate, $poRate * (1.012 + ($seed % 4) / 100));
+            }
+            $rate = $rate >= 1000 ? round($rate / 50) * 50 : ($rate >= 100 ? round($rate) : round($rate, 1));
+          }
+          $when = (int) min($events['bids_invited'] + (40 + 35 * $k) * 60, $now - 600);
+          $bidId = $repo->saveBid($rid, $V[$vid], $rate, $lead, Bidding::NOTES[$seed % count(Bidding::NOTES)], $loginFor[$vid] ?? 1, $when);
+          $repo->log($rid, $loginFor[$vid] ?? 0, 'bid_received', 'Bid from ' . $vendors[$vid][0] . ': ' . Format::inr($rate) . ' per ' . Format::per($unit) . ', delivers in ' . $lead . ' days.', $when);
+          if ($vid === $vendorId) {
+            $winnerBid = $bidId;
+          }
         }
+        if (isset($events['awarded'])) {
+          $repo->log($rid, 0, 'bids_closed', 'All ' . count($invited) . ' invited suppliers have bid. Bidding closed.', $events['awarded'] - 1800);
+          $repo->settleBids($rid, $winnerBid);
+          $repo->log($rid, $uids['procurement'], 'awarded', 'Chose ' . $vendors[$vendorId][0] . '\'s bid: ' . Format::inr($poRate) . ' per ' . Format::per($unit) . ', total ' . Format::inr($poAmount) . '.' . ($needsDirector ? ' Sent to the Director for approval.' : ''), $events['awarded']);
+        }
+      }
+      foreach (['director_approved', 'po_issued', 'received', 'invoice_checked', 'paid'] as $ev) {
+        if (!isset($events[$ev])) {
+          continue;
+        }
+        $time = $events[$ev];
+        match ($ev) {
+          'director_approved' => $repo->log($rid, $uids['director'], 'director_approved', 'Order approved by the Director.', $time),
+          'po_issued' => $repo->log($rid, $uids['procurement'], 'po_issued', 'Order ' . $values['po_number'] . ' placed with ' . $vendors[$vendorId][0] . ' for ' . Format::inr($poAmount) . '.', $time),
+          'received' => $repo->log($rid, $uids['procurement'], 'received', 'Delivery confirmed: ' . Format::qty($values['received_qty']) . ' ' . $unit . ' arrived at site.', $time),
+          'invoice_checked' => $repo->log($rid, $uids['procurement'], 'invoice_checked', 'Bill ' . $values['invoice_no'] . ' checked against the order and the delivery: ' . ($values['match_status'] === 'matched' ? 'everything matches.' : 'it does not match.'), $time),
+          'paid' => $repo->log($rid, $uids['procurement'], 'paid', 'Paid ' . Format::inr($values['paid_amount']) . ' to ' . $vendors[$vendorId][0] . '.', $time),
+        };
       }
     }
     $repo->log(0, $uids['sunrise'], 'vendor_registered', 'Sunrise Steel Traders registered as a vendor. Waiting for procurement to verify.', $now - 26 * 3600);
-    $repo->log(0, $uids['admin'], 'settings', 'Approval limits set: PM up to ' . Format::inr($limit) . ', Director above that.', $now - 90 * 86400);
+    $repo->log(0, $uids['admin'], 'settings', 'Approval rule set: the Director approves every order before it is placed.', $now - 90 * 86400);
   }
 
   /**
@@ -368,12 +409,22 @@ class DemoData {
       'pm' => ['Ananya Sharma', 'Project Manager', 'project_manager'],
       'pm2' => ['Vikram Rao', 'Project Manager', 'project_manager'],
       'procurement' => ['Neha Kapoor', 'Procurement Officer', 'procurement_officer'],
-      'vendor' => ['Mahesh Joshi', 'Vendor · Shree Balaji Cement', 'vendor'],
-      'sunrise' => ['Kavita Iyer', 'Vendor · pending verification', 'vendor'],
+      // Every supplier has a login, so any material can be bid on.
+      'balaji' => ['Mahesh Joshi', 'Shree Balaji Cement · cement', 'vendor'],
+      'deccan' => ['Sunil Patil', 'Deccan Building Materials · cement, aggregates', 'vendor'],
+      'konark' => ['Ravi Menon', 'Konark Steel · steel', 'vendor'],
+      'mahalaxmi' => ['Deepak Kulkarni', 'Mahalaxmi Iron & Steel · steel', 'vendor'],
+      'sai' => ['Ganesh Shinde', 'Sai Aggregates & Sand · sand, aggregates', 'vendor'],
+      'ecoblock' => ['Farah Khan', 'EcoBlock Industries · blocks, bricks', 'vendor'],
+      'brightline' => ['Karan Malhotra', 'Brightline Electricals · wire', 'vendor'],
+      'aquaflow' => ['Joseph D\'Souza', 'AquaFlow Pipes & Fittings · pipes', 'vendor'],
+      'prism' => ['Ritika Bose', 'Prism Tiles & Paints · tiles, paint', 'vendor'],
+      'national' => ['Amit Ghosh', 'National Cement Depot · cement, bricks', 'vendor'],
+      'sunrise' => ['Kavita Iyer', 'Sunrise Steel Traders · waiting for approval', 'vendor'],
     ];
     // Accounts from earlier versions of the demo (6 and 5 roles).
     $storage = \Drupal::entityTypeManager()->getStorage('user');
-    foreach ($storage->loadByProperties(['name' => ['purchase', 'store', 'accounts', 'engineer']]) as $old) {
+    foreach ($storage->loadByProperties(['name' => ['purchase', 'store', 'accounts', 'engineer', 'vendor', 'steel']]) as $old) {
       if (str_ends_with((string) $old->getEmail(), '@example.com')) {
         $old->delete();
       }
@@ -394,7 +445,7 @@ class DemoData {
       }
       $account->save();
       $uids[$username] = (int) $account->id();
-      $info[(int) $account->id()] = ['name' => $name, 'title' => $title, 'username' => $username];
+      $info[(int) $account->id()] = ['name' => $name, 'title' => $title, 'username' => $username, 'group' => $role === 'vendor' ? 'Suppliers' : 'Team'];
     }
     $state->set('sthira.people', $info);
     $state->set('sthira.demo_uids', array_values($uids));

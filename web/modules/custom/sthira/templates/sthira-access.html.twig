@@ -21,11 +21,11 @@
   </table>
 
   <section class="section limits">
-    <div class="section-head"><h2>Approval limit</h2></div>
+    <div class="section-head"><h2>Approval rule</h2></div>
     {% if limits_form %}
       {{ limits_form }}
     {% else %}
-      <p>Project Manager approves up to <strong>{{ limit }}</strong>. Anything above goes to the Director.</p>
+      <p>Every winning bid is approved by the Director before the order is placed.</p>
     {% endif %}
   </section>
 </div>

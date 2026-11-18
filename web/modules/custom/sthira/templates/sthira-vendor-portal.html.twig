@@ -15,6 +15,35 @@
   {% endif %}
 
   {% if approved %}
+    <section class="section">
+      <div class="section-head"><h2>Open for bids {% if open_bids %}<span class="count">{{ open_bids|length }}</span>{% endif %}</h2></div>
+      {% for b in open_bids %}
+        <div class="bid-card">
+          <div class="bid-card-head">
+            <div><strong>{{ b.title }}</strong><small>{{ b.where }} · needed by {{ b.needed }} · {{ b.ref }}</small></div>
+            {% if b.my_bid %}<span class="pill pill--ok">Your bid: {{ b.my_bid }}</span>{% else %}<span class="pill pill--warn">Not bid yet</span>{% endif %}
+          </div>
+          {{ b.form }}
+        </div>
+      {% else %}
+        <div class="empty empty--help">
+          <strong>Nothing to bid on right now.</strong>
+          <p>When our procurement team invites you to bid on materials you sell ({{ v.supplies|lower }}), the request appears here with a form for your price and delivery time. We also send you a WhatsApp and email.</p>
+        </div>
+      {% endfor %}
+    </section>
+
+    {% if bid_history %}
+      <section class="section">
+        <div class="section-head"><h2>My past bids</h2></div>
+        <ul class="list">
+          {% for b in bid_history %}
+            <li><div class="list-row"><span class="list-main"><strong>{{ b.title }}</strong><small>{{ b.where }} · {{ b.my_bid }}</small></span><span class="pill pill--{{ b.tone }}">{{ b.result }}</span></div></li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
     <div class="stats">
       <div class="stat"><span class="stat-label">On-time delivery</span><span class="stat-value">{{ v.on_time }}%</span><span class="stat-sub">across past orders</span></div>
       <div class="stat"><span class="stat-label">Rating</span><span class="stat-value">{{ v.rating }} ★</span><span class="stat-sub">from site teams</span></div>

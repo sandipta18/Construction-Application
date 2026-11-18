@@ -18,6 +18,9 @@ dependencies:
   - field.field.node.material_request.field_rejected_stage
   - field.field.node.material_request.field_approved_pm
   - field.field.node.material_request.field_approved_director
+  - field.field.node.material_request.field_invited
+  - field.field.node.material_request.field_bids_opened
+  - field.field.node.material_request.field_bids_closed
   - field.field.node.material_request.field_vendor
   - field.field.node.material_request.field_po_number
   - field.field.node.material_request.field_po_rate
@@ -110,6 +113,9 @@ hidden:
   field_rejected_stage: true
   field_approved_pm: true
   field_approved_director: true
+  field_invited: true
+  field_bids_opened: true
+  field_bids_closed: true
   field_vendor: true
   field_po_number: true
   field_po_rate: true

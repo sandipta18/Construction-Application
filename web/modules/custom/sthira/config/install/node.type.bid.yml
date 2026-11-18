@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+    - sthira
+name: Bid
+type: bid
+description: A supplier's price and delivery time for one material request.
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

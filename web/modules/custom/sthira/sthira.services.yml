@@ -19,3 +19,9 @@ services:
   sthira.search:
     class: Drupal\sthira\Search\SearchEngine
     arguments: ['@sthira.search_index', '@sthira.embedder']
+  sthira.answer:
+    class: Drupal\sthira\Search\AnswerComposer
+    arguments: ['@sthira.search', '@sthira.search_index', '@sthira.repository']
+  sthira.bidding:
+    class: Drupal\sthira\Bidding
+    arguments: ['@sthira.repository', '@sthira.workflow', '@sthira.assistant']

@@ -11,6 +11,5 @@ permissions:
   - 'access sthira app'
   - 'raise requests'
   - 'approve requests'
-  - 'receive goods'
   - 'view finance'
   - 'view vendors'

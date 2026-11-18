@@ -21,7 +21,42 @@ class Assistant {
    * Ranks vendors for a request and explains the top pick.
    */
   public function rankVendors(array $r): array {
-    $quotes = $this->repo->quotesForItem((int) $r['item_id']);
+    return $this->rankQuotes($r, $this->repo->quotesForItem((int) $r['item_id']));
+  }
+
+  /**
+   * Ranks the bids on a request, with the same score as rate cards.
+   */
+  public function rankBids(array $r, array $bids): array {
+    $vendors = $this->repo->vendors();
+    $quotes = [];
+    foreach ($bids as $b) {
+      $v = $vendors[$b['vendor_id']] ?? NULL;
+      if (!$v) {
+        continue;
+      }
+      $quotes[] = [
+        'vendor_id' => $v['id'],
+        'bid_id' => $b['id'],
+        'rate' => $b['rate'],
+        'lead_days' => $b['lead_days'],
+        'note' => $b['note'],
+        'submitted' => $b['changed'],
+        'name' => $v['name'],
+        'city' => $v['city'],
+        'rating' => $v['rating'],
+        'on_time' => $v['on_time'],
+        'contract_expiry' => $v['contract_expiry'],
+      ];
+    }
+    return $this->rankQuotes($r, $quotes);
+  }
+
+  /**
+   * Scores quotes: 45% price, 30% on-time record, 25% rating, minus a
+   * penalty when delivery would miss the needed-by date.
+   */
+  public function rankQuotes(array $r, array $quotes): array {
     if (!$quotes) {
       return [];
     }
@@ -82,6 +117,9 @@ class Assistant {
       }
       $out[] = [
         'vendor_id' => (int) $q['vendor_id'],
+        'bid_id' => $q['bid_id'] ?? NULL,
+        'note' => $q['note'] ?? '',
+        'submitted' => $q['submitted'] ?? NULL,
         'name' => $q['name'],
         'city' => $q['city'],
         'rate_raw' => (float) $q['rate'],
@@ -315,7 +353,7 @@ class Assistant {
         'keywords' => array_values(array_filter(array_map('trim', explode(',', $i['keywords'])))),
       ];
     }
-    $pmLimit = $this->workflow->pmLimit();
+    $pmLimit = 0;
     $directors = array_map(fn($uid) => $this->repo->person($uid)['name'], $this->repo->usersWithRole('director'));
     $pms = $this->repo->usersWithRole('project_manager');
     $projects = [];
@@ -363,7 +401,8 @@ class Assistant {
       'OPC 53 Grade Cement' => 'Cement',
       'TMT Steel Bars Fe500D' => 'TMT steel',
     ];
-    return $map[$name] ?? $name;
+    // Drop the size in brackets: "AAC Blocks (600 × 200 × 150 millimetres)".
+    return $map[$name] ?? trim(preg_replace('/\s*\(.*\)\s*$/', '', $name));
   }
 
   public function shortProject(string $name): string {

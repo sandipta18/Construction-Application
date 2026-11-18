@@ -18,26 +18,43 @@
   <div class="detail">
     <div class="detail-main">
 
-      {% if reco %}
+      {% if reco or waiting_bids %}
         <section class="section section--ai">
-          <div class="section-head"><h2><span class="ai-tag">AI</span> Best supplier for this order</h2></div>
-          <div class="reco">
-            <div class="reco-name"><strong>{{ reco.0.name }}</strong><span>{{ reco.0.rate }} · delivers in {{ reco.0.lead }} · on time {{ reco.0.on_time }}% of the time</span></div>
-            <p>{{ reco.0.reason }}</p>
-          </div>
-          {% if reco|length > 1 %}
-            <details class="more">
-              <summary>Compare all {{ reco|length }} suppliers</summary>
-              <table class="table">
-                <thead><tr><th>Supplier</th><th class="num">Price</th><th>Delivers in</th><th>On time</th><th>Rating</th><th class="num">Score</th></tr></thead>
-                <tbody>
-                  {% for v in reco %}
-                    <tr><td>{{ v.name }}{% for t in v.tags %} <span class="tag{{ t == 'May miss date' ? ' tag--bad' }}">{{ t }}</span>{% endfor %}</td><td class="num">{{ v.rate }}</td><td>{{ v.lead }}</td><td>{{ v.on_time }}%</td><td>{{ v.rating }}</td><td class="num"><b>{{ v.score }}</b></td></tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-              <p class="muted small">The score mixes price, how often they deliver on time and their rating.</p>
-            </details>
+          <div class="section-head"><h2>{% if r.bids_open %}Bids received{% else %}<span class="ai-tag">AI</span> Bids{% endif %}</h2><span class="muted small">{{ reco|length }} bid{{ reco|length == 1 ? '' : 's' }}{% if waiting_bids %} · waiting for {{ waiting_bids|length }}{% endif %}</span></div>
+          {% if reco and r.bids_open %}
+            <p class="muted small">Bidding is open. Prices are sealed: suppliers cannot see each other's bids. The winner is chosen after bidding closes.</p>
+            <table class="table bids-table">
+              <thead><tr><th>Supplier</th><th class="num">Price</th><th class="num">Total</th><th>Delivers in</th><th>Received</th></tr></thead>
+              <tbody>
+                {% for v in reco %}
+                  <tr><td>{{ v.name }}{% if v.note %}<br><small class="muted">{{ v.note }}</small>{% endif %}</td><td class="num">{{ v.rate }}</td><td class="num">{{ v.total }}</td><td>{{ v.lead }}</td><td class="muted">{{ v.received }}</td></tr>
+                {% endfor %}
+                {% for name in waiting_bids %}
+                  <tr class="is-waiting"><td>{{ name }}</td><td colspan="4" class="muted">Has not bid yet</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% elseif reco %}
+            {% set best = reco.0 %}
+            {% for v in reco %}{% if v.status == 'won' %}{% set best = v %}{% endif %}{% endfor %}
+            <div class="reco">
+              <div class="reco-name"><strong>{{ best.name }}{% if best.status == 'won' %} <span class="tag tag--ok">Winner</span>{% endif %}</strong><span>{{ best.rate }} · total {{ best.total }} · delivers in {{ best.lead }} · on time {{ best.on_time }}% of the time</span></div>
+              <p>{{ best.status == 'won' and best.bid_id != reco.0.bid_id ? 'Chosen by Procurement. The highest score was ' ~ reco.0.name ~ '.' : reco.0.reason }}</p>
+            </div>
+            <table class="table bids-table">
+              <thead><tr><th>Supplier</th><th class="num">Price</th><th class="num">Total</th><th>Delivers in</th><th>On time</th><th>Rating</th><th class="num">Score</th></tr></thead>
+              <tbody>
+                {% for v in reco %}
+                  <tr class="{{ v.status == 'won' ? 'is-winner' }}{{ v.status == 'lost' ? ' is-lost' }}"><td>{{ v.name }}{% if v.status == 'won' %} <span class="tag tag--ok">Winner</span>{% endif %}{% for t in v.tags %} <span class="tag{{ t == 'May miss date' ? ' tag--bad' }}">{{ t }}</span>{% endfor %}{% if v.note %}<br><small class="muted">{{ v.note }}</small>{% endif %}</td><td class="num">{{ v.rate }}</td><td class="num">{{ v.total }}</td><td>{{ v.lead }}</td><td>{{ v.on_time }}%</td><td>{{ v.rating }}</td><td class="num"><b>{{ v.score }}</b></td></tr>
+                {% endfor %}
+                {% for name in waiting_bids %}
+                  <tr class="is-waiting"><td>{{ name }}</td><td colspan="6" class="muted">{{ r.stage_key == 'bidding' ? 'Has not bid yet' : 'Did not bid' }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <p class="muted small">The score mixes price (45%), how often they deliver on time (30%) and their rating (25%), and drops if delivery would be late.</p>
+          {% else %}
+            <p class="muted">Invited {{ waiting_bids|join(', ') }}. No bids yet.</p>
           {% endif %}
         </section>
       {% endif %}

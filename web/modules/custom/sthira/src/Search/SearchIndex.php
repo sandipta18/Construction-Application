@@ -27,7 +27,7 @@ class SearchIndex implements DestructableInterface {
   /**
    * Requirement stages shown publicly, with their public label.
    */
-  const PUBLIC_STAGES = ['approved' => 'Sourcing now', 'director_review' => 'Coming soon', 'pm_review' => 'Coming soon'];
+  const PUBLIC_STAGES = ['bidding' => 'Open for bids', 'approved' => 'Opening soon', 'pm_review' => 'Coming soon'];
 
   /**
    * Content types that feed the index.
@@ -229,6 +229,9 @@ class SearchIndex implements DestructableInterface {
     // Open requirements (public view: quantity, place, date; never price).
     $reqs = [];
     foreach ($this->repo->requests(NULL, array_keys(self::PUBLIC_STAGES)) as $r) {
+      if (!empty($r['bids_closed'])) {
+        continue;
+      }
       $item = $items[$r['item_id']] ?? NULL;
       $p = $projects[$r['project_id']] ?? NULL;
       if (!$item || !$p) {
@@ -248,7 +251,7 @@ class SearchIndex implements DestructableInterface {
         'needed' => $r['needed_by'],
         'needed_label' => Format::day($r['needed_by']),
         'status' => self::PUBLIC_STAGES[$r['stage']],
-        'live' => $r['stage'] === 'approved',
+        'live' => $r['stage'] === 'bidding',
         'urgent' => $r['priority'] === 'urgent',
       ];
       $reqs[$r['id']] = $data;

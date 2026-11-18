@@ -17,12 +17,12 @@ function sthira_theme() {
   $hooks = [
     'sthira_dashboard' => ['greeting', 'subtitle', 'role', 'kpis', 'queue', 'queue_count', 'insights', 'insight_count', 'can_raise', 'urls', 'add_links', 'content_url'],
     'sthira_requests' => ['tabs', 'rows', 'can_raise', 'urls', 'finance', 'empty'],
-    'sthira_request' => ['r', 'steps', 'action_form', 'waiting', 'reco', 'match', 'budget', 'timeline', 'finance', 'urls'],
+    'sthira_request' => ['r', 'steps', 'action_form', 'waiting', 'reco', 'waiting_bids', 'match', 'budget', 'timeline', 'finance', 'urls'],
     'sthira_intake' => ['samples'],
     'sthira_projects' => ['projects', 'finance', 'add_links'],
     'sthira_project' => ['p', 'budgets', 'stock', 'requests', 'team', 'finance', 'urls'],
     'sthira_vendors' => ['vendors', 'finance', 'add_links', 'tabs', 'view', 'can_approve'],
-    'sthira_vendor_portal' => ['v', 'approved', 'rates', 'orders', 'urls'],
+    'sthira_vendor_portal' => ['v', 'approved', 'rates', 'orders', 'urls', 'open_bids', 'bid_history'],
     'sthira_landing' => ['requirements', 'requirement_count', 'projects', 'categories', 'stats', 'urls', 'suggestions', 'slides'],
     'sthira_insights' => ['insights'],
     'sthira_access' => ['roles', 'columns', 'limits_form', 'limit', 'team', 'can_edit', 'urls'],
@@ -88,7 +88,7 @@ function sthira_preprocess_page(&$variables) {
       if ($uid == 1) {
         continue;
       }
-      $accounts[] = ['username' => $p['username'] ?? '', 'name' => $p['name'], 'title' => $p['title'], 'initials' => Format::initials($p['name'])];
+      $accounts[$p['group'] ?? 'Team'][] = ['username' => $p['username'] ?? '', 'name' => $p['name'], 'title' => $p['title'], 'initials' => Format::initials($p['name'])];
     }
     $sthira['demo_accounts'] = $accounts;
     $sthira['demo_password'] = \Drupal\sthira\DemoData::PASSWORD;
@@ -97,10 +97,19 @@ function sthira_preprocess_page(&$variables) {
   if ($layout === 'app') {
     $me = $repo->person((int) $account->id());
     $sthira['user'] = $me;
+    // The logo goes to each person's own home: suppliers to their portal.
+    $sthira['home_url'] = Url::fromRoute($isVendor ? 'sthira.vendor_portal' : 'sthira.dashboard')->toString();
     $queueCount = count($workflow->queue($account));
     $nav = [];
     if ($isVendor) {
-      $nav[] = ['label' => 'My company', 'route' => 'sthira.vendor_portal', 'icon' => 'vendors', 'match' => 'entity.node.edit_form', 'match2' => 'node.add', 'match3' => 'entity.node.delete_form'];
+      // Badge: requests open for bids that this supplier has not bid on yet.
+      $toBid = 0;
+      if ($company = $repo->vendorForUser((int) $account->id())) {
+        foreach ($repo->invitedRequests($company['id']) as $r) {
+          $toBid += ($r['stage'] === 'bidding' && empty($r['bids_closed']) && !$repo->bidFor($r['id'], $company['id'])) ? 1 : 0;
+        }
+      }
+      $nav[] = ['label' => 'My company', 'route' => 'sthira.vendor_portal', 'icon' => 'vendors', 'badge' => $toBid ?: NULL, 'match' => 'entity.node.edit_form', 'match2' => 'node.add', 'match3' => 'entity.node.delete_form'];
     }
     else {
       // Only the essentials. Everything else lives under Settings.
@@ -131,7 +140,8 @@ function sthira_preprocess_page(&$variables) {
       $switcher = [];
       foreach ($demoUids as $uid) {
         $p = $repo->person($uid);
-        $switcher[] = [
+        $info = \Drupal::state()->get('sthira.people', [])[$uid] ?? [];
+        $switcher[$info['group'] ?? 'Team'][] = [
           'name' => $p['name'],
           'role' => $p['title'],
           'initials' => $p['initials'],
@@ -189,7 +199,7 @@ function sthira_form_node_form_alter(&$form, FormStateInterface $form_state) {
     $form['title']['widget'][0]['value']['#default_value'] = $node->label() ?: 'Auto';
     $form['title']['#access'] = FALSE;
   }
-  if (in_array($node->bundle(), ['project', 'material', 'vendor', 'vendor_rate', 'site_stock', 'material_request', 'faq'], TRUE)) {
+  if (in_array($node->bundle(), ['project', 'material', 'vendor', 'vendor_rate', 'site_stock', 'material_request', 'faq', 'bid'], TRUE)) {
     foreach (['revision_log', 'revision', 'revision_information'] as $key) {
       if (isset($form[$key])) {
         $form[$key]['#access'] = FALSE;
@@ -324,7 +334,7 @@ function sthira_module_preuninstall($module) {
   }
   $storage = \Drupal::entityTypeManager()->getStorage('node');
   $ids = $storage->getQuery()->accessCheck(FALSE)
-    ->condition('type', ['project', 'material', 'vendor', 'vendor_rate', 'site_stock', 'material_request', 'faq'], 'IN')
+    ->condition('type', ['project', 'material', 'vendor', 'vendor_rate', 'site_stock', 'material_request', 'faq', 'bid'], 'IN')
     ->execute();
   foreach (array_chunk($ids, 50) as $chunk) {
     $storage->delete($storage->loadMultiple($chunk));
@@ -365,19 +375,7 @@ function sthira_node_access(\Drupal\node\NodeInterface $node, $operation, \Drupa
         ? $result
         : \Drupal\Core\Access\AccessResult::forbidden()->cachePerUser()->addCacheableDependency($node);
 
-    case 'vendor':
-      if (sthira_is_vendor() && !$node->isNew() && $node->get('field_vendor_status')->value === 'rejected') {
-        $node->set('field_vendor_status', 'pending');
-      }
-      break;
-
     case 'vendor_rate':
-      if (sthira_is_vendor()) {
-        $own = \Drupal::service('sthira.repository')->vendorForUser((int) \Drupal::currentUser()->id());
-        if ($own) {
-          $node->set('field_vendor', $own['id']);
-        }
-      }
       $vendor = $node->get('field_vendor')->entity;
       $own = $vendor && (int) $vendor->get('field_vendor_user')->target_id === (int) $account->id();
       return $own ? $result : \Drupal\Core\Access\AccessResult::forbidden()->cachePerUser()->addCacheableDependency($node);

@@ -13,7 +13,7 @@ namespace Drupal\sthira\Search;
  */
 class SearchEngine {
 
-  const GENERIC_NAME_WORDS = ['tower', 'park', 'city', 'annex', 'grade', 'coarse', 'red', 'sqmm', 'sqft', 'cum'];
+  const GENERIC_NAME_WORDS = ['tower', 'park', 'city', 'annex', 'grade', 'coarse', 'red', 'square', 'millimetre', 'metre', 'cubic', 'inch', 'long', 'litre', 'feet', 'piece', 'fire', 'resistant'];
 
   const INTENT_LABELS = [
     'list_projects' => 'List projects',
@@ -107,6 +107,8 @@ class SearchEngine {
     $clean = function (array $map) use ($cities) {
       $out = [];
       foreach ($map as $t => $ids) {
+        // PHP turns number-only words ("53", "600") into int keys.
+        $t = (string) $t;
         $ids = array_values(array_unique($ids));
         if (count($ids) === 1 && strlen($t) >= 3 && !ctype_digit($t[0]) && !in_array($t, self::GENERIC_NAME_WORDS, TRUE) && !isset($cities[$t])) {
           $out[$t] = $ids[0];
@@ -116,7 +118,7 @@ class SearchEngine {
     };
     return $this->lexicon = [
       'vocab' => $vocab,
-      'all_words' => array_values(array_unique(array_merge(array_keys($vocab), Thesaurus::vocabulary()))),
+      'all_words' => array_values(array_unique(array_map('strval', array_merge(array_keys($vocab), Thesaurus::vocabulary())))),
       'cities' => $cities,
       'projects' => $clean($projectTerms),
       'materials' => $clean($materialTerms),
@@ -170,7 +172,7 @@ class SearchEngine {
         $u['concepts'][$c] = TRUE;
       }
     }
-    foreach (array_keys($u['orig']) as $t) {
+    foreach (array_map('strval', array_keys($u['orig'])) as $t) {
       foreach (Thesaurus::expand($t) as $s => $w) {
         if (!isset($u['qw'][$s])) {
           $u['qw'][$s] = $w;
@@ -607,12 +609,12 @@ class SearchEngine {
     $n = count($reqs);
     $live = count(array_filter($reqs, fn($r) => $r['data']['live']));
     if ($live === $n) {
-      return $n === 1 ? 'It is sourcing now.' : 'All are sourcing now.';
+      return $n === 1 ? 'It is open for bids now.' : 'All are open for bids now.';
     }
     if (!$live) {
-      return $n === 1 ? 'It is coming soon, awaiting final approval.' : 'All are coming soon, awaiting final approval.';
+      return $n === 1 ? 'Bids open for it soon.' : 'Bids open for these soon.';
     }
-    return $live . ' ' . ($live === 1 ? 'is' : 'are') . ' sourcing now; the rest are coming soon.';
+    return $live . ' ' . ($live === 1 ? 'is' : 'are') . ' open for bids now; the rest open soon.';
   }
 
   protected function filterProjects(array $u, array $projects): array {

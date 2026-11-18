@@ -73,6 +73,8 @@ class Repository {
     'paid_date' => 'field_paid_date',
     'approved_pm' => 'field_approved_pm',
     'approved_director' => 'field_approved_director',
+    'bids_opened' => 'field_bids_opened',
+    'bids_closed' => 'field_bids_closed',
   ];
 
   protected array $memo = [];
@@ -292,6 +294,7 @@ class Repository {
           'contact' => $this->v($n, 'field_contact') ?? '',
           'phone' => $this->v($n, 'field_phone') ?? '',
           'categories' => implode(', ', array_map(fn($k) => self::CATEGORIES[$k] ?? $k, $this->values($n, 'field_supplies'))),
+          'category_keys' => $this->values($n, 'field_supplies'),
           'rating' => (float) $this->v($n, 'field_rating'),
           'on_time' => (int) $this->v($n, 'field_on_time'),
           'orders' => (int) $this->v($n, 'field_order_count'),
@@ -354,6 +357,7 @@ class Repository {
       $out[] = [
         'id' => (int) $n->id(),
         'item' => $item['name'] ?? '?',
+        'item_id' => (int) $this->v($n, 'field_material'),
         'unit' => $item['unit'] ?? '',
         'rate' => (float) $this->v($n, 'field_rate'),
         'lead_days' => (int) $this->v($n, 'field_lead_days'),
@@ -412,6 +416,7 @@ class Repository {
     $r['raw_text'] = $r['raw_text'] ?? '';
     $r['unit'] = $r['unit'] ?? '';
     $r['needed_by'] = $r['needed_by'] ?? date('Y-m-d', strtotime('+7 days'));
+    $r['invited'] = array_map('intval', $this->values($n, 'field_invited'));
     $r['created_by'] = (int) $n->getOwnerId();
     $r['created'] = (int) $n->getCreatedTime();
     $r['updated'] = (int) $n->getChangedTime();
@@ -475,6 +480,9 @@ class Repository {
   }
 
   protected function apply(NodeInterface $node, array $values): void {
+    if (array_key_exists('invited', $values)) {
+      $node->set('field_invited', array_map(fn($id) => ['target_id' => (int) $id], $values['invited'] ?: []));
+    }
     foreach ($values as $key => $value) {
       $field = self::REQUEST_FIELDS[$key] ?? NULL;
       if (!$field) {
@@ -490,6 +498,101 @@ class Repository {
         $node->set($field, $value);
       }
     }
+  }
+
+  /* ---------- Bids ---------- */
+
+  public function bidArray(NodeInterface $n): array {
+    return [
+      'id' => (int) $n->id(),
+      'request_id' => (int) $this->v($n, 'field_request'),
+      'vendor_id' => (int) $this->v($n, 'field_vendor'),
+      'rate' => (float) $this->v($n, 'field_rate'),
+      'lead_days' => (int) $this->v($n, 'field_lead_days'),
+      'note' => $this->v($n, 'field_note') ?? '',
+      'status' => $this->v($n, 'field_bid_status') ?? 'submitted',
+      'uid' => (int) $n->getOwnerId(),
+      'created' => (int) $n->getCreatedTime(),
+      'changed' => (int) $n->getChangedTime(),
+    ];
+  }
+
+  /**
+   * Bids on one request, oldest first, keyed by bid id.
+   */
+  public function bids(int $requestId): array {
+    $out = [];
+    foreach ($this->nodes('bid', [['field_request', $requestId]], ['created' => 'ASC']) as $n) {
+      $out[(int) $n->id()] = $this->bidArray($n);
+    }
+    return $out;
+  }
+
+  public function bidFor(int $requestId, int $vendorId): ?array {
+    foreach ($this->bids($requestId) as $b) {
+      if ($b['vendor_id'] === $vendorId) {
+        return $b;
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Creates or updates a vendor's bid on a request. Returns the bid id.
+   */
+  public function saveBid(int $requestId, int $vendorId, float $rate, int $leadDays, string $note, int $uid, ?int $time = NULL): int {
+    $existing = $this->bidFor($requestId, $vendorId);
+    $node = $existing ? $this->storage()->load($existing['id']) : $this->storage()->create([
+      'type' => 'bid',
+      'uid' => $uid,
+      'status' => 1,
+      'field_request' => ['target_id' => $requestId],
+      'field_vendor' => ['target_id' => $vendorId],
+      'field_bid_status' => 'submitted',
+    ]);
+    $request = $this->request($requestId);
+    $vendor = $this->vendor($vendorId);
+    $node->setTitle(($request['ref'] ?? 'MR') . ' · ' . ($vendor['name'] ?? 'Supplier'));
+    $node->set('field_rate', (int) round($rate));
+    $node->set('field_lead_days', $leadDays);
+    $node->set('field_note', $note);
+    if ($time) {
+      $node->setCreatedTime($time);
+      $node->setChangedTime($time);
+    }
+    $node->sthira_internal = TRUE;
+    $node->save();
+    return (int) $node->id();
+  }
+
+  /**
+   * Marks the winning bid "won" and the others "not selected".
+   */
+  public function settleBids(int $requestId, ?int $winnerBidId): void {
+    foreach ($this->nodes('bid', [['field_request', $requestId]]) as $n) {
+      $n->set('field_bid_status', $winnerBidId === NULL ? 'submitted' : ((int) $n->id() === $winnerBidId ? 'won' : 'lost'));
+      $n->sthira_internal = TRUE;
+      $n->save();
+    }
+  }
+
+  /**
+   * Requests a vendor was invited to bid on (any stage), newest first.
+   */
+  public function invitedRequests(int $vendorId): array {
+    $out = [];
+    foreach ($this->nodes('material_request', [['field_invited', $vendorId]], ['changed' => 'DESC']) as $n) {
+      $out[(int) $n->id()] = $this->requestArray($n);
+    }
+    return $out;
+  }
+
+  /**
+   * Approved vendors who supply a category (by category label).
+   */
+  public function vendorsForCategory(string $categoryLabel): array {
+    $key = array_search($categoryLabel, self::CATEGORIES, TRUE);
+    return array_filter($this->vendors(), fn($v) => $v['status'] === 'approved' && in_array($key, $v['category_keys'], TRUE));
   }
 
   /**

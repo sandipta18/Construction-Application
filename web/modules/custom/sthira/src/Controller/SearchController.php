@@ -5,6 +5,7 @@ namespace Drupal\sthira\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\sthira\Form\SearchRebuildForm;
+use Drupal\sthira\Search\AnswerComposer;
 use Drupal\sthira\Search\Embedder;
 use Drupal\sthira\Search\SearchEngine;
 use Drupal\sthira\Search\SearchIndex;
@@ -21,6 +22,7 @@ class SearchController extends ControllerBase {
     protected SearchEngine $engine,
     protected SearchIndex $index,
     protected Embedder $embedder,
+    protected AnswerComposer $composer,
   ) {}
 
   public static function create(ContainerInterface $container) {
@@ -28,6 +30,7 @@ class SearchController extends ControllerBase {
       $container->get('sthira.search'),
       $container->get('sthira.search_index'),
       $container->get('sthira.embedder'),
+      $container->get('sthira.answer'),
     );
   }
 
@@ -36,7 +39,7 @@ class SearchController extends ControllerBase {
    */
   public function api(Request $request) {
     $q = trim((string) $request->query->get('q', ''));
-    $result = $this->engine->search($q);
+    $result = $this->composer->ask($q);
     $result['urls'] = [
       'register' => Url::fromRoute('sthira.vendor_register')->toString(),
     ];

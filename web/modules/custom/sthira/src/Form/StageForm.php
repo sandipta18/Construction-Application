@@ -5,13 +5,15 @@ namespace Drupal\sthira\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\sthira\Assistant;
+use Drupal\sthira\Bidding;
 use Drupal\sthira\Format;
 use Drupal\sthira\Repository;
 use Drupal\sthira\Workflow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * The action panel on a request: approve, issue PO, receive, match, pay.
+ * The action panel on a request: approve, invite bids, choose a winner,
+ * approve big orders, confirm delivery, check the bill, pay.
  */
 class StageForm extends FormBase {
 
@@ -19,6 +21,7 @@ class StageForm extends FormBase {
     protected Repository $repo,
     protected Workflow $workflow,
     protected Assistant $assistant,
+    protected Bidding $bidding,
   ) {}
 
   public static function create(ContainerInterface $container) {
@@ -26,6 +29,7 @@ class StageForm extends FormBase {
       $container->get('sthira.repository'),
       $container->get('sthira.workflow'),
       $container->get('sthira.assistant'),
+      $container->get('sthira.bidding'),
     );
   }
 
@@ -45,12 +49,7 @@ class StageForm extends FormBase {
 
     switch ($r['stage']) {
       case 'pm_review':
-      case 'director_review':
-        $isPm = $r['stage'] === 'pm_review';
-        $next = $isPm && $this->workflow->needsDirector($r)
-          ? 'It costs more than ' . Format::inr($this->workflow->pmLimit()) . ', so the Director approves it after you.'
-          : 'Once approved, Procurement orders it from a supplier.';
-        $form['intro'] = $this->intro('Approve this request?', $next);
+        $form['intro'] = $this->intro('Approve this request?', 'Once approved, Procurement asks suppliers for bids.');
         $form['comment'] = [
           '#type' => 'textarea',
           '#title' => 'Reason',
@@ -74,37 +73,117 @@ class StageForm extends FormBase {
         break;
 
       case 'approved':
-        $ranked = $this->assistant->rankVendors($r);
+        $candidates = $this->bidding->candidates($r);
+        $item = $this->repo->items()[$r['item_id']] ?? ['category' => 'this material'];
+        $form['intro'] = $this->intro('Invite bids', $candidates
+          ? 'We will send this request to the approved ' . strtolower($item['category']) . ' suppliers below. Each replies with a price and a delivery time.'
+          : 'No approved supplier sells ' . strtolower($item['category']) . ' yet. Approve one under Suppliers first.');
         $options = [];
-        foreach ($ranked as $i => $v) {
-          $options[$v['vendor_id']] = $v['name'] . ' · ' . $v['rate'] . ($i === 0 ? ' (best choice)' : '');
+        foreach ($candidates as $v) {
+          $options[$v['id']] = $v['name'] . ' · ' . $v['city'];
         }
-        $form['intro'] = $this->intro('Place the order', $ranked ? 'The best supplier is already picked for you. Just click the button.' : 'No supplier has a price for this material yet.');
-        $form['vendor'] = [
-          '#type' => 'radios',
-          '#title' => 'Supplier',
+        $form['vendors'] = [
+          '#type' => 'checkboxes',
+          '#title' => 'Suppliers to invite',
           '#options' => $options,
-          '#default_value' => $ranked ? $ranked[0]['vendor_id'] : NULL,
-          '#required' => TRUE,
-        ];
-        $form['more'] = [
-          '#type' => 'details',
-          '#title' => 'Change the price (optional)',
-          '#open' => FALSE,
-        ];
-        $form['more']['rate'] = [
-          '#type' => 'number',
-          '#title' => 'Agreed price (₹ per ' . Format::per($unit) . ')',
-          '#min' => 0,
-          '#step' => 'any',
-          '#parents' => ['rate'],
+          '#default_value' => array_keys($options),
         ];
         $form['actions'] = ['#type' => 'actions'];
-        $form['actions']['po'] = [
+        $form['actions']['invite'] = [
           '#type' => 'submit',
-          '#value' => 'Place order',
-          '#name' => 'po',
+          '#value' => 'Invite bids',
+          '#name' => 'invite',
           '#attributes' => ['class' => ['btn', 'btn-primary']],
+          '#access' => (bool) $options,
+        ];
+        break;
+
+      case 'bidding':
+        $bids = $this->repo->bids((int) $id);
+        $ranked = $this->assistant->rankBids($r, $bids);
+        $pending = $this->bidding->pending($r);
+        if ($this->bidding->isOpen($r)) {
+          // Still collecting: suppliers bid first, the winner comes later.
+          $form['intro'] = $this->intro('Waiting for bids', count($bids) . ' of ' . count($r['invited']) . ' suppliers have bid. Waiting for: ' . implode(', ', $pending) . '. Bidding closes by itself when everyone has bid.');
+          if ($bids) {
+            $form['actions'] = ['#type' => 'actions'];
+            $form['actions']['close'] = [
+              '#type' => 'submit',
+              '#value' => 'Close bidding now',
+              '#name' => 'close',
+              '#attributes' => ['class' => ['btn', 'btn-ghost']],
+            ];
+          }
+          break;
+        }
+        if (!$ranked) {
+          $form['intro'] = $this->intro('No bids received', 'Bidding closed without any bids.');
+          break;
+        }
+        $waiting = $pending;
+        $text = 'Bidding is closed with ' . count($ranked) . ' of ' . count($r['invited']) . ' bids. The assistant ranked them and picked the best overall value; you can choose another.';
+        $text .= ' The Director approves your choice before the order is placed.';
+        // If the Director sent the last choice back, show why.
+        foreach ($this->repo->logs((int) $id, 50) as $l) {
+          if (in_array($l['action'], ['awarded', 'bids_invited'], TRUE)) {
+            break;
+          }
+          if ($l['action'] === 'sent_back') {
+            $form['sent_back'] = [
+              '#type' => 'inline_template',
+              '#template' => '<div class="notice notice--bad"><strong>Rejected by the Director.</strong> {{ text }}</div>',
+              '#context' => ['text' => preg_replace('/^Rejected by the Director and sent back to Procurement: /', '', $l['message'])],
+              '#weight' => -10,
+            ];
+            break;
+          }
+        }
+        $form['intro'] = $this->intro('Choose the winning bid', $text);
+        $options = [];
+        foreach ($ranked as $i => $b) {
+          $options[$b['bid_id']] = $b['name'] . ' · ' . $b['rate'] . ' · ' . $b['lead'] . ' · total ' . $b['total'] . ($i === 0 ? ' (best choice)' : '');
+        }
+        $form['bid'] = [
+          '#type' => 'radios',
+          '#title' => 'Bids',
+          '#options' => $options,
+          '#default_value' => $ranked[0]['bid_id'],
+          '#required' => TRUE,
+        ];
+        $form['actions'] = ['#type' => 'actions'];
+        $form['actions']['award'] = [
+          '#type' => 'submit',
+          '#value' => 'Send to Director',
+          '#name' => 'award',
+          '#attributes' => ['class' => ['btn', 'btn-primary']],
+        ];
+        break;
+
+      case 'director_review':
+        $vendor = $this->repo->vendor((int) $r['vendor_id']);
+        $form['intro'] = $this->intro('Approve this order?', sprintf(
+          'Procurement chose %s: %s per %s, total %s. Approve to place the order, or reject it and send it back to Procurement with a reason.',
+          $vendor['name'] ?? 'a supplier', Format::inr($r['po_rate']), Format::per($unit), Format::inr($r['po_amount'])
+        ));
+        $form['comment'] = [
+          '#type' => 'textarea',
+          '#title' => 'Reason',
+          '#rows' => 2,
+          '#placeholder' => 'Reason (only needed if you reject)',
+          '#title_display' => 'invisible',
+        ];
+        $form['actions'] = ['#type' => 'actions'];
+        $form['actions']['approve'] = [
+          '#type' => 'submit',
+          '#value' => 'Approve order',
+          '#name' => 'approve',
+          '#attributes' => ['class' => ['btn', 'btn-primary']],
+        ];
+        $form['actions']['send_back'] = [
+          '#type' => 'submit',
+          '#value' => 'Reject and send back',
+          '#name' => 'send_back',
+          '#attributes' => ['class' => ['btn', 'btn-ghost', 'btn-danger']],
         ];
         break;
 
@@ -210,8 +289,11 @@ class StageForm extends FormBase {
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $op = $form_state->getTriggeringElement()['#name'] ?? '';
-    if ($op === 'reject' && trim((string) $form_state->getValue('comment')) === '') {
-      $form_state->setErrorByName('comment', 'Please give a reason for rejecting, so the site team knows what to change.');
+    if (in_array($op, ['reject', 'send_back'], TRUE) && trim((string) $form_state->getValue('comment')) === '') {
+      $form_state->setErrorByName('comment', 'Please give a reason, so the team knows what to change.');
+    }
+    if ($op === 'invite' && !array_filter((array) $form_state->getValue('vendors'))) {
+      $form_state->setErrorByName('vendors', 'Pick at least one supplier to invite.');
     }
   }
 
@@ -233,16 +315,37 @@ class StageForm extends FormBase {
     switch ($op) {
       case 'approve':
         if ($r['stage'] === 'pm_review') {
-          $toDirector = $this->workflow->needsDirector($r);
-          $this->repo->updateRequest($id, ['stage' => $toDirector ? 'director_review' : 'approved', 'approved_pm' => $uid]);
-          $this->repo->log($id, $uid, 'pm_approved', 'Approved by PM' . ($comment ? ': ' . $comment : '.') . ($toDirector ? ' Above the ' . Format::inr($this->workflow->pmLimit()) . ' limit, so routed to the Director.' : ''));
-          $msg = $toDirector ? 'Approved. It now goes to the Director, as it costs more than your limit.' : 'Approved. Procurement will now order it.';
+          $this->repo->updateRequest($id, ['stage' => 'approved', 'approved_pm' => $uid]);
+          $this->repo->log($id, $uid, 'pm_approved', 'Approved by PM' . ($comment ? ': ' . $comment : '.'));
+          $msg = 'Approved. Procurement will now ask suppliers for bids.';
         }
         else {
-          $this->repo->updateRequest($id, ['stage' => 'approved', 'approved_director' => $uid]);
-          $this->repo->log($id, $uid, 'director_approved', 'Approved by Director' . ($comment ? ': ' . $comment : '.'));
-          $msg = 'Approved. Procurement will now order it.';
+          $this->bidding->approveOrder($id, $uid, $comment);
+          $vendor = $this->repo->vendor((int) $r['vendor_id']);
+          $msg = 'Order approved and placed with ' . ($vendor['name'] ?? 'the supplier') . '.';
         }
+        break;
+
+      case 'send_back':
+        $this->bidding->sendBack($id, $uid, $comment);
+        $msg = 'Rejected and sent back to Procurement with your reason.';
+        break;
+
+      case 'invite':
+        $res = $this->bidding->invite($id, array_keys(array_filter((array) $form_state->getValue('vendors'))), $uid);
+        $this->messenger()->addStatus('Bids invited from ' . implode(', ', $res['invited']) . '. They will bid in their supplier portal; bidding closes when everyone has bid.');
+        return;
+
+      case 'close':
+        $this->bidding->close($id, $uid, TRUE);
+        $this->messenger()->addStatus('Bidding closed. Now choose the winning bid.');
+        return;
+
+      case 'award':
+        $stage = $this->bidding->award($id, (int) $form_state->getValue('bid'), $uid);
+        $r2 = $this->repo->request($id);
+        $vendor = $this->repo->vendor((int) $r2['vendor_id']);
+        $msg = 'Winner chosen: ' . ($vendor['name'] ?? '') . ' for ' . Format::inr($r2['po_amount']) . '. Sent to the Director for approval.';
         break;
 
       case 'reject':
@@ -252,36 +355,6 @@ class StageForm extends FormBase {
         $this->repo->log($id, 0, 'notified', 'WhatsApp alert sent to ' . $requester['name'] . ' with the reason (simulated).');
         $this->messenger()->addStatus('Not approved. ' . $requester['name'] . ' has been told why on WhatsApp (demo).');
         return;
-
-      case 'po':
-        $vendorId = (int) $form_state->getValue('vendor');
-        $ranked = $this->assistant->rankVendors($r);
-        $chosen = NULL;
-        foreach ($ranked as $v) {
-          if ($v['vendor_id'] === $vendorId) {
-            $chosen = $v;
-          }
-        }
-        if (!$chosen) {
-          $this->messenger()->addError('Pick a supplier that has a price for this material.');
-          return;
-        }
-        $rate = (float) $form_state->getValue('rate') ?: $chosen['rate_raw'];
-        $po = $this->repo->nextPoNumber();
-        $amount = (int) round($rate * (float) $r['qty']);
-        $this->repo->updateRequest($id, [
-          'stage' => 'ordered',
-          'vendor_id' => $vendorId,
-          'po_number' => $po,
-          'po_rate' => (int) round($rate),
-          'po_amount' => $amount,
-          'po_date' => time(),
-        ]);
-        $override = $ranked[0]['vendor_id'] !== $vendorId ? ' Chose a different supplier than suggested (' . $ranked[0]['name'] . ').' : ' Went with the suggested supplier.';
-        $this->repo->log($id, $uid, 'po_issued', 'Order ' . $po . ' placed with ' . $chosen['name'] . ' at ' . Format::inr($rate) . ' per ' . Format::per($unit) . ' (' . Format::inr($amount) . ').' . $override);
-        $this->repo->log($id, 0, 'notified', 'Order ' . $po . ' sent to ' . $chosen['name'] . ' on email and WhatsApp (demo).');
-        $msg = 'Order placed with ' . $chosen['name'] . ' for ' . Format::inr($amount) . '.';
-        break;
 
       case 'grn':
         $qty = (float) $form_state->getValue('received_qty');

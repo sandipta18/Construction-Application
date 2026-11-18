@@ -24,16 +24,16 @@ class Format {
   }
 
   /**
-   * Short rupee format: ₹4.2 Cr, ₹12.5 L, or full below one lakh.
+   * Short rupee format: ₹4.2 crore, ₹12.5 lakh, or full below one lakh.
    */
   public static function short($n): string {
     $n = (float) $n;
     $abs = abs($n);
     if ($abs >= 1e7) {
-      return ($n < 0 ? '-' : '') . '₹' . self::trim(number_format($abs / 1e7, 2)) . ' Cr';
+      return ($n < 0 ? '-' : '') . '₹' . self::trim(number_format($abs / 1e7, 2)) . ' crore';
     }
     if ($abs >= 1e5) {
-      return ($n < 0 ? '-' : '') . '₹' . self::trim(number_format($abs / 1e5, 1)) . ' L';
+      return ($n < 0 ? '-' : '') . '₹' . self::trim(number_format($abs / 1e5, 1)) . ' lakh';
     }
     return self::inr($n);
   }
@@ -46,7 +46,7 @@ class Format {
    * Singular unit for "per unit" labels, e.g. ₹410/bag.
    */
   public static function per(string $unit): string {
-    $map = ['bags' => 'bag', 'tonnes' => 'tonne', 'coils' => 'coil', 'buckets' => 'bucket', 'nos' => 'no.', 'pcs' => 'pc'];
+    $map = ['bags' => 'bag', 'tonnes' => 'tonne', 'coils' => 'coil', 'buckets' => 'bucket', 'pieces' => 'piece', 'cubic metres' => 'cubic metre', 'square feet' => 'square foot', 'litres' => 'litre', 'metres' => 'metre', 'nos' => 'piece', 'pcs' => 'piece', 'cu.m' => 'cubic metre', 'sq.ft' => 'square foot'];
     return $map[$unit] ?? $unit;
   }
 

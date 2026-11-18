@@ -33,10 +33,10 @@
 
   function short(n) {
     if (n >= 1e7) {
-      return '₹' + (n / 1e7).toFixed(2).replace(/\.?0+$/, '') + ' Cr';
+      return '₹' + (n / 1e7).toFixed(2).replace(/\.?0+$/, '') + ' crore';
     }
     if (n >= 1e5) {
-      return '₹' + (n / 1e5).toFixed(1).replace(/\.0$/, '') + ' L';
+      return '₹' + (n / 1e5).toFixed(1).replace(/\.0$/, '') + ' lakh';
     }
     return inr(n);
   }
@@ -205,10 +205,7 @@
 
   function routeText(s, project, amount) {
     const pm = project ? project.pm : 'the PM';
-    if (amount > s.pmLimit) {
-      return 'Approval: ' + escapeHtml(pm) + ' → ' + escapeHtml(s.director) + ' (above ' + escapeHtml(s.pmLimitLabel) + ')';
-    }
-    return 'Approval: ' + escapeHtml(pm) + ' only (within ' + escapeHtml(s.pmLimitLabel) + ')';
+    return 'Next: suppliers bid, Procurement picks the best, then ' + escapeHtml(s.director) + ' approves the order';
   }
 
   function render(result, s) {

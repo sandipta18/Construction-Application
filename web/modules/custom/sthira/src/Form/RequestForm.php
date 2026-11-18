@@ -194,22 +194,17 @@ class RequestForm extends FormBase {
     $r = $this->repo->request($id);
     $this->repo->log($id, (int) $a->id(), 'created', 'Raised ' . $r['ref'] . ': ' . Format::qty($qty) . ' ' . $item['unit'] . ' of ' . $item['name'] . ' for ' . $this->assistant->shortProject($project['name']) . ' (est. ' . Format::inr($amount) . ')' . ($raw ? ' using AI assist' : '') . '.');
 
-    $limit = Format::inr($this->workflow->pmLimit());
     if ($start['stage'] === 'approved') {
-      $this->repo->log($id, (int) $a->id(), 'pm_approved', $start['approved_director'] ? 'Approved on raising (Director).' : 'Approved on raising: raised by the project manager, within the ' . $limit . ' limit.');
-    }
-    elseif ($start['stage'] === 'director_review') {
-      $this->repo->log($id, (int) $a->id(), 'pm_approved', 'Approved on raising by the project manager. Above the ' . $limit . ' limit, so routed to the Director.');
+      $this->repo->log($id, (int) $a->id(), 'pm_approved', 'Approved on raising: raised by the project manager.');
     }
     $waiting = $this->workflow->waitingOn($r);
     $names = $waiting['names'] ?: ($waiting['role'] ?? 'the team');
     $why = [
-      'approved' => 'for a purchase order',
-      'director_review' => 'for approval (above the ' . $limit . ' PM limit)',
+      'approved' => 'to invite bids from suppliers',
       'pm_review' => 'for approval',
     ][$start['stage']] ?? '';
-    $this->repo->log($id, 0, 'notified', 'WhatsApp alert sent to ' . $names . ' ' . $why . ' (simulated).');
-    $this->messenger()->addStatus($r['ref'] . ' submitted. ' . $names . ' has been notified on WhatsApp ' . $why . ' (simulated).');
+    $this->repo->log($id, 0, 'notified', 'WhatsApp alert sent to ' . $names . ' ' . $why . ' (demo).');
+    $this->messenger()->addStatus($r['ref'] . ' sent. ' . $names . ' has been told on WhatsApp ' . $why . ' (demo).');
     $form_state->setRedirect('sthira.request', ['id' => $id]);
   }
 

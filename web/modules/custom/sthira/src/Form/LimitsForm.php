@@ -18,14 +18,9 @@ class LimitsForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('sthira.settings');
     $form['#attributes']['class'][] = 'limits-form';
-    $form['pm_limit'] = [
-      '#type' => 'number',
-      '#title' => 'Project Manager can approve up to (₹)',
-      '#default_value' => $config->get('pm_limit'),
-      '#min' => 0,
-      '#step' => 1000,
-      '#required' => TRUE,
-      '#description' => 'Anything above this is routed to the Director automatically.',
+    $form['rule'] = [
+      '#type' => 'inline_template',
+      '#template' => '<p class="muted">Every winning bid is approved by the Director before the order is placed.</p>',
     ];
     $form['demo_mode'] = [
       '#type' => 'checkbox',
@@ -35,7 +30,7 @@ class LimitsForm extends FormBase {
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => 'Save limits',
+      '#value' => 'Save',
       '#attributes' => ['class' => ['btn', 'btn-primary']],
     ];
     return $form;
@@ -45,14 +40,8 @@ class LimitsForm extends FormBase {
     if (!$this->currentUser()->hasPermission('manage sthira settings')) {
       return;
     }
-    $config = $this->configFactory()->getEditable('sthira.settings');
-    $old = (int) $config->get('pm_limit');
-    $new = (int) $form_state->getValue('pm_limit');
-    $config->set('pm_limit', $new)->set('demo_mode', (bool) $form_state->getValue('demo_mode'))->save();
-    if ($old !== $new) {
-      \Drupal::service('sthira.repository')->log(0, (int) $this->currentUser()->id(), 'settings', 'PM approval limit changed from ' . Format::inr($old) . ' to ' . Format::inr($new) . '.');
-    }
-    $this->messenger()->addStatus('Approval limits saved. New requests follow the updated rule.');
+    $this->configFactory()->getEditable('sthira.settings')->set('demo_mode', (bool) $form_state->getValue('demo_mode'))->save();
+    $this->messenger()->addStatus('Settings saved.');
   }
 
 }

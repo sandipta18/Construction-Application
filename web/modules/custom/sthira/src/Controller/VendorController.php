@@ -4,6 +4,7 @@ namespace Drupal\sthira\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
+use Drupal\sthira\Form\BidForm;
 use Drupal\sthira\Format;
 use Drupal\sthira\Repository;
 use Drupal\sthira\Workflow;
@@ -43,6 +44,37 @@ class VendorController extends ControllerBase {
     }
 
     $items = $this->repo->items();
+    $projects = $this->repo->projects();
+
+    // Requests this supplier was invited to bid on.
+    $open = [];
+    $history = [];
+    foreach ($this->repo->invitedRequests($v['id']) as $r) {
+      $item = $items[$r['item_id']] ?? ['name' => '?', 'unit' => ''];
+      $project = $projects[$r['project_id']] ?? ['name' => '', 'location' => ''];
+      $mine = $this->repo->bidFor($r['id'], $v['id']);
+      $row = [
+        'title' => Format::qty($r['qty']) . ' ' . $r['unit'] . ' · ' . $item['name'],
+        'where' => $project['name'] . ', ' . $project['location'],
+        'needed' => Format::day($r['needed_by']),
+        'ref' => $r['ref'],
+        'my_bid' => $mine ? Format::inr($mine['rate']) . ' per ' . Format::per($r['unit']) . ' · ' . $mine['lead_days'] . ' days · total ' . Format::inr($mine['rate'] * (float) $r['qty']) : NULL,
+      ];
+      if ($r['stage'] === 'bidding' && empty($r['bids_closed']) && $approved) {
+        $row['form'] = $this->formBuilder()->getForm(BidForm::create(\Drupal::getContainer())->setRequestId($r['id']));
+        $open[] = $row;
+      }
+      elseif ($mine) {
+        $row['result'] = match ($mine['status']) {
+          'won' => 'Won',
+          'lost' => 'Not selected',
+          default => 'Under review',
+        };
+        $row['tone'] = ['won' => 'ok', 'lost' => 'neutral'][$mine['status']] ?? 'info';
+        $history[] = $row;
+      }
+    }
+
     $orders = [];
     foreach ($this->repo->requestsForVendor($v['id']) as $r) {
       if (empty($r['po_number'])) {
@@ -80,6 +112,8 @@ class VendorController extends ControllerBase {
       ],
       '#approved' => $approved,
       '#rates' => $rates,
+      '#open_bids' => $open,
+      '#bid_history' => array_slice($history, 0, 8),
       '#orders' => $orders,
       '#urls' => [
         'edit' => $node && $node->access('update') ? Url::fromRoute('entity.node.edit_form', ['node' => $v['id']], ['query' => ['destination' => $back]])->toString() : NULL,

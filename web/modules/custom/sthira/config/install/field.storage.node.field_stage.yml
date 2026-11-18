@@ -14,13 +14,15 @@ type: list_string
 settings:
   allowed_values:
   - value: pm_review
-    label: Awaiting PM approval
-  - value: director_review
-    label: Awaiting Director approval
+    label: Needs PM approval
   - value: approved
-    label: Approved, awaiting PO
+    label: Ready for bids
+  - value: bidding
+    label: Collecting bids
+  - value: director_review
+    label: Order needs Director approval
   - value: ordered
-    label: PO issued
+    label: Ordered
   - value: received
     label: Delivered
   - value: invoiced

@@ -18,6 +18,9 @@ dependencies:
   - field.field.node.material_request.field_rejected_stage
   - field.field.node.material_request.field_approved_pm
   - field.field.node.material_request.field_approved_director
+  - field.field.node.material_request.field_invited
+  - field.field.node.material_request.field_bids_opened
+  - field.field.node.material_request.field_bids_closed
   - field.field.node.material_request.field_vendor
   - field.field.node.material_request.field_po_number
   - field.field.node.material_request.field_po_rate
@@ -69,7 +72,7 @@ content:
   field_qty:
     type: number_decimal
     label: inline
-    settings: &id006
+    settings: &id007
       thousand_separator: ','
       decimal_separator: .
       scale: 1
@@ -158,99 +161,120 @@ content:
     third_party_settings: {}
     weight: 15
     region: content
-  field_vendor:
+  field_invited:
     type: entity_reference_label
     label: inline
     settings: *id001
     third_party_settings: {}
     weight: 16
     region: content
+  field_bids_opened:
+    type: timestamp
+    label: inline
+    settings: &id006
+      date_format: custom
+      custom_date_format: d M Y, H:i
+      timezone: ''
+    third_party_settings: {}
+    weight: 17
+    region: content
+  field_bids_closed:
+    type: timestamp
+    label: inline
+    settings: *id006
+    third_party_settings: {}
+    weight: 18
+    region: content
+  field_vendor:
+    type: entity_reference_label
+    label: inline
+    settings: *id001
+    third_party_settings: {}
+    weight: 19
+    region: content
   field_po_number:
     type: string
     label: inline
     settings: *id003
     third_party_settings: {}
-    weight: 17
+    weight: 20
     region: content
   field_po_rate:
     type: number_integer
     label: inline
     settings: *id004
     third_party_settings: {}
-    weight: 18
+    weight: 21
     region: content
   field_po_amount:
     type: number_integer
     label: inline
     settings: *id004
     third_party_settings: {}
-    weight: 19
+    weight: 22
     region: content
   field_po_date:
     type: timestamp
     label: inline
-    settings: &id007
-      date_format: custom
-      custom_date_format: d M Y, H:i
-      timezone: ''
+    settings: *id006
     third_party_settings: {}
-    weight: 20
+    weight: 23
     region: content
   field_received_qty:
     type: number_decimal
     label: inline
-    settings: *id006
+    settings: *id007
     third_party_settings: {}
-    weight: 21
+    weight: 24
     region: content
   field_grn_date:
     type: timestamp
     label: inline
-    settings: *id007
+    settings: *id006
     third_party_settings: {}
-    weight: 22
+    weight: 25
     region: content
   field_invoice_no:
     type: string
     label: inline
     settings: *id003
     third_party_settings: {}
-    weight: 23
+    weight: 26
     region: content
   field_invoice_qty:
     type: number_decimal
     label: inline
-    settings: *id006
+    settings: *id007
     third_party_settings: {}
-    weight: 24
+    weight: 27
     region: content
   field_invoice_amount:
     type: number_integer
     label: inline
     settings: *id004
     third_party_settings: {}
-    weight: 25
+    weight: 28
     region: content
   field_match_status:
     type: list_default
     label: inline
     settings: *id002
     third_party_settings: {}
-    weight: 26
+    weight: 29
     region: content
   field_paid_amount:
     type: number_integer
     label: inline
     settings: *id004
     third_party_settings: {}
-    weight: 27
+    weight: 30
     region: content
   field_paid_date:
     type: timestamp
     label: inline
-    settings: *id007
+    settings: *id006
     third_party_settings: {}
-    weight: 28
+    weight: 31
     region: content
   links:
     settings: {}

@@ -12,8 +12,9 @@ class Workflow {
 
   const STAGES = [
     'pm_review' => ['label' => 'Needs approval', 'long' => 'Waiting for the project manager to approve', 'tone' => 'warn'],
-    'director_review' => ['label' => 'Needs Director', 'long' => 'Waiting for the Director to approve', 'tone' => 'warn'],
-    'approved' => ['label' => 'Ready to order', 'long' => 'Approved · ready to order', 'tone' => 'info'],
+    'approved' => ['label' => 'Ready for bids', 'long' => 'Approved · ready to invite bids', 'tone' => 'info'],
+    'bidding' => ['label' => 'Collecting bids', 'long' => 'Suppliers are sending their prices', 'tone' => 'info'],
+    'director_review' => ['label' => 'Needs Director', 'long' => 'Winning bid waiting for the Director', 'tone' => 'warn'],
     'ordered' => ['label' => 'Ordered', 'long' => 'Ordered · waiting for delivery', 'tone' => 'info'],
     'received' => ['label' => 'Delivered', 'long' => 'Delivered · bill to be checked', 'tone' => 'violet'],
     'invoiced' => ['label' => 'Ready to pay', 'long' => 'Bill checked · ready to pay', 'tone' => 'violet'],
@@ -26,8 +27,9 @@ class Workflow {
    */
   const ACTIONS = [
     'pm_review' => 'Approve',
-    'director_review' => 'Approve',
-    'approved' => 'Place order',
+    'approved' => 'Invite bids',
+    'bidding' => 'Choose winner',
+    'director_review' => 'Approve order',
     'ordered' => 'Confirm delivery',
     'received' => 'Check bill',
     'invoiced' => 'Pay supplier',
@@ -40,6 +42,7 @@ class Workflow {
     'pm_review' => 'approve requests',
     'director_review' => 'approve high value requests',
     'approved' => 'issue purchase orders',
+    'bidding' => 'issue purchase orders',
     'ordered' => 'receive goods',
     'received' => 'process invoices',
     'invoiced' => 'process invoices',
@@ -52,15 +55,18 @@ class Workflow {
     'pm_review' => 'project_manager',
     'director_review' => 'director',
     'approved' => 'procurement_officer',
-    'ordered' => 'project_manager',
+    'bidding' => 'procurement_officer',
+    'ordered' => 'procurement_officer',
     'received' => 'procurement_officer',
     'invoiced' => 'procurement_officer',
   ];
 
   /**
-   * Stages scoped to project membership (the project's PM).
+   * Stages scoped to project membership (the project's PM). After the
+   * Director approves an order, Procurement alone handles delivery, the bill
+   * and payment.
    */
-  const PROJECT_SCOPED = ['pm_review', 'ordered'];
+  const PROJECT_SCOPED = ['pm_review'];
 
   public function __construct(protected ConfigFactoryInterface $configFactory, protected Repository $repo) {}
 
@@ -72,8 +78,11 @@ class Workflow {
     return (bool) $this->configFactory->get('sthira.settings')->get('demo_mode');
   }
 
+  /**
+   * The Director approves every order before it is placed.
+   */
   public function needsDirector(array $r): bool {
-    return (float) $r['est_amount'] > $this->pmLimit();
+    return TRUE;
   }
 
   public static function stage(string $key): array {
@@ -96,7 +105,8 @@ class Workflow {
    *
    * Raising a request is the raiser's own approval when they could approve
    * it anyway (the project's PM, or the Director). So a PM's request goes
-   * straight to purchasing, or to the Director when it is above the PM limit.
+   * straight to Procurement for bids. The Director approves the order later,
+   * once Procurement has chosen the winning bid.
    *
    * @return array
    *   ['stage' => string, 'approved_pm' => ?int, 'approved_director' => ?int]
@@ -107,13 +117,6 @@ class Workflow {
       return $out;
     }
     $out['approved_pm'] = (int) $a->id();
-    if ($this->needsDirector($r)) {
-      if (!$a->hasPermission('approve high value requests')) {
-        $out['stage'] = 'director_review';
-        return $out;
-      }
-      $out['approved_director'] = (int) $a->id();
-    }
     $out['stage'] = 'approved';
     return $out;
   }
@@ -140,13 +143,20 @@ class Workflow {
       return [];
     }
     $rows = $this->repo->requests($this->repo->accessibleProjectIds($a), $stages);
-    return array_filter($rows, fn($r) => $this->canAct($r, $a));
+    // While bidding is open, the request waits on suppliers, not on anyone here.
+    return array_filter($rows, fn($r) => $this->canAct($r, $a) && !($r['stage'] === 'bidding' && empty($r['bids_closed'])));
   }
 
   /**
    * Who the request is waiting on: role label and names.
    */
   public function waitingOn(array $r): ?array {
+    if ($r['stage'] === 'bidding' && empty($r['bids_closed'])) {
+      $vendors = $this->repo->vendors();
+      $bidders = array_column($this->repo->bids((int) $r['id']), 'vendor_id');
+      $names = array_map(fn($v) => $vendors[$v]['name'] ?? '', array_diff($r['invited'], $bidders));
+      return ['role' => 'Suppliers', 'people' => [], 'names' => implode(', ', $names), 'task' => 'send their bids'];
+    }
     $role = self::STAGE_ROLE[$r['stage']] ?? NULL;
     if (!$role) {
       return NULL;
@@ -163,8 +173,9 @@ class Workflow {
       'names' => implode(', ', array_column($people, 'name')),
       'task' => [
         'pm_review' => 'approve it',
-        'director_review' => 'approve it',
-        'approved' => 'place the order',
+        'approved' => 'invite bids from suppliers',
+        'bidding' => 'choose the winning bid',
+        'director_review' => 'approve the order',
         'ordered' => 'confirm the delivery',
         'received' => 'check the bill',
         'invoiced' => 'pay the supplier',
@@ -179,12 +190,13 @@ class Workflow {
     $defs = [
       'requested' => 'Requested',
       'pm_review' => 'PM approval',
+      'approved' => 'Invite bids',
+      'bidding' => ($r['stage'] === 'bidding' && empty($r['bids_closed'])) ? 'Collect bids' : 'Choose winner',
     ];
     if ($this->needsDirector($r) || $r['stage'] === 'director_review' || !empty($r['approved_director'])) {
       $defs['director_review'] = 'Director approval';
     }
     $defs += [
-      'approved' => 'Order',
       'ordered' => 'Delivery',
       'received' => 'Bill check',
       'invoiced' => 'Payment',
@@ -192,8 +204,9 @@ class Workflow {
     $doneAction = [
       'requested' => 'created',
       'pm_review' => 'pm_approved',
+      'approved' => 'bids_invited',
+      'bidding' => 'awarded',
       'director_review' => 'director_approved',
-      'approved' => 'po_issued',
       'ordered' => 'received',
       'received' => 'invoice_checked',
       'invoiced' => 'paid',

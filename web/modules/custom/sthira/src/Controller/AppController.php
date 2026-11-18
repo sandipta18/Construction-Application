@@ -52,10 +52,13 @@ class AppController extends ControllerBase {
     $a = $this->currentUser();
     $items = $this->repo->items();
     $projects = $this->repo->projects();
-    $stageLabel = ['approved' => 'Sourcing now', 'director_review' => 'Coming soon', 'pm_review' => 'Coming soon'];
+    $stageLabel = ['bidding' => 'Open for bids', 'approved' => 'Opening soon', 'pm_review' => 'Coming soon'];
 
     $requirements = [];
-    foreach ($this->repo->requests(NULL, ['approved', 'director_review', 'pm_review']) as $r) {
+    foreach ($this->repo->requests(NULL, ['bidding', 'approved', 'pm_review']) as $r) {
+      if (!empty($r['bids_closed'])) {
+        continue;
+      }
       $item = $items[$r['item_id']] ?? NULL;
       $p = $projects[$r['project_id']] ?? NULL;
       if (!$item || !$p) {
@@ -73,7 +76,7 @@ class AppController extends ControllerBase {
         'needed' => Format::day($r['needed_by']),
         'needed_iso' => $r['needed_by'],
         'status' => $stageLabel[$r['stage']],
-        'live' => $r['stage'] === 'approved',
+        'live' => $r['stage'] === 'bidding',
         'urgent' => $r['priority'] === 'urgent',
       ];
     }
@@ -104,7 +107,7 @@ class AppController extends ControllerBase {
     foreach ($projects as $p) {
       $short = $this->assistant->shortProject($p['name']);
       $needs = array_values(array_filter($requirements, fn($q) => $q['project'] === $short));
-      $parts = array_map(fn($q) => $q['qty'] . ' of ' . $q['material'], array_slice($needs, 0, 2));
+      $parts = array_map(fn($q) => $q['qty'] . ' of ' . $this->assistant->shortItem($q['material']), array_slice($needs, 0, 2));
       if ($needs) {
         $soonest = min(array_map(fn($q) => strtotime($q['needed_iso']), $needs));
         $sentence = $short . ' needs ' . implode(' and ', $parts) . (count($needs) > 2 ? ', plus ' . (count($needs) - 2) . ' more' : '') . ', first by ' . Format::day(date('Y-m-d', $soonest)) . '.';
@@ -318,7 +321,7 @@ class AppController extends ControllerBase {
     $queue = $this->workflow->queue($a);
     $tabs = [
       'queue' => ['Waiting on me', NULL],
-      'open' => ['In progress', ['pm_review', 'director_review', 'approved', 'ordered', 'received', 'invoiced']],
+      'open' => ['In progress', ['pm_review', 'approved', 'bidding', 'director_review', 'ordered', 'received', 'invoiced']],
       'closed' => ['Closed', ['paid', 'rejected']],
     ];
     if (!$this->workflow->queueStages($a)) {
@@ -392,9 +395,21 @@ class AppController extends ControllerBase {
       ];
     }
 
+    // Bids: ranked by the assistant; the winner is marked once chosen.
     $reco = [];
-    if ($r['stage'] === 'approved' && $a->hasPermission('view finance')) {
-      $reco = $this->assistant->rankVendors($r);
+    $waitingBids = [];
+    if ($a->hasPermission('view finance') && $r['invited']) {
+      $bids = $this->repo->bids((int) $r['id']);
+      $reco = $this->assistant->rankBids($r, $bids);
+      foreach ($reco as &$b) {
+        $b['status'] = $bids[$b['bid_id']]['status'] ?? 'submitted';
+        $b['received'] = Format::ago((int) ($bids[$b['bid_id']]['changed'] ?? 0));
+      }
+      unset($b);
+      $vendors = $this->repo->vendors();
+      foreach (array_diff($r['invited'], array_column($bids, 'vendor_id')) as $vid) {
+        $waitingBids[] = $vendors[$vid]['name'] ?? '';
+      }
     }
     $match = NULL;
     if (!empty($r['invoice_no'])) {
@@ -416,6 +431,8 @@ class AppController extends ControllerBase {
       'project_code' => $project['code'],
       'project_url' => Url::fromRoute('sthira.project', ['id' => $project['id']])->toString(),
       'stage' => $stage['long'],
+      'stage_key' => $r['stage'],
+      'bids_open' => $r['stage'] === 'bidding' && empty($r['bids_closed']),
       'tone' => $stage['tone'],
       'by' => $by,
       'created' => Format::date((int) $r['created']) . ' · ' . Format::ago((int) $r['created']),
@@ -428,7 +445,6 @@ class AppController extends ControllerBase {
       'amount' => $finance ? Format::inr($r['po_amount'] ?: $r['est_amount']) : NULL,
       'amount_label' => $r['po_amount'] ? 'Order value' : 'Estimated cost',
       'needs_director' => $this->workflow->needsDirector($r),
-      'limit' => Format::inr($this->workflow->pmLimit()),
       'po' => $r['po_number'] ? [
         'number' => $r['po_number'],
         'vendor' => $vendor['name'] ?? '',
@@ -449,6 +465,7 @@ class AppController extends ControllerBase {
       '#action_form' => $canAct ? $this->formBuilder()->getForm(StageForm::class, $id) : NULL,
       '#waiting' => $waiting,
       '#reco' => $reco,
+      '#waiting_bids' => $waitingBids,
       '#match' => $match,
       '#budget' => $budget,
       '#timeline' => $this->logRows($logs, !$finance),
@@ -658,11 +675,12 @@ class AppController extends ControllerBase {
     $a = $this->currentUser();
     $columns = [
       'raise requests' => 'Raise',
-      'approve requests' => 'Approve ≤ limit',
-      'approve high value requests' => 'Approve > limit',
-      'issue purchase orders' => 'Order',
-      'receive goods' => 'Receive',
-      'process invoices' => 'Pay',
+      'approve requests' => 'Approve requests',
+      'issue purchase orders' => 'Invite bids & order',
+      'access vendor portal' => 'Bid',
+      'approve high value requests' => 'Approve orders',
+      'receive goods' => 'Confirm delivery',
+      'process invoices' => 'Check bill & pay',
       'approve vendors' => 'Verify vendors',
       'view finance' => 'See ₹',
     ];
@@ -715,7 +733,7 @@ class AppController extends ControllerBase {
       '#roles' => $roles,
       '#columns' => array_values($columns),
       '#limits_form' => $canEdit ? $this->formBuilder()->getForm(LimitsForm::class) : NULL,
-      '#limit' => Format::inr($this->workflow->pmLimit()),
+      '#limit' => '',
       '#team' => $team,
       '#can_edit' => $canEdit,
       '#urls' => [

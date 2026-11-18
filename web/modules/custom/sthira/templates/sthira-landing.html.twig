@@ -79,9 +79,7 @@
     <div class="lp-suggest">
       {% for s in suggestions %}<button type="button" data-lp-try="{{ s }}">{{ s }}</button>{% endfor %}
     </div>
-    <div class="lp-thinking" data-lp-thinking hidden><span class="dots"><i></i><i></i><i></i></span> <span data-lp-step>Searching…</span></div>
-    <div class="lp-results" data-lp-results hidden></div>
-    <p class="lp-disclaimer" data-lp-disclaimer>Answers come from our own search index of live requirements, projects, materials and supplier help, ranked on our server. No external AI service.</p>
+    <p class="lp-disclaimer" data-lp-disclaimer>Answers open on their own screen. They come from our own index of live requirements, projects, materials and supplier help. No external AI service.</p>
   </section>
 
   <section class="lp-band">
@@ -185,8 +183,27 @@
       <div><a class="lp-logo lp-logo--light" href="#top"><span class="lp-logo-mark"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11.5"/><circle cx="16" cy="16" r="5.5" opacity=".65"/><path d="M16 16l8.2-8.2"/><circle cx="16" cy="16" r="1.9" fill="currentColor" stroke="none"/><circle cx="21.6" cy="20.8" r="1.7" fill="currentColor" stroke="none"/></svg></span>Infra Radar</a><p>Construction procurement prototype. Demo data only.</p></div>
       <div><h4>Suppliers</h4><a href="{{ urls.register }}">Register</a><a href="{{ urls.login }}">Sign in</a><a href="#faq-search">Supplier help</a></div>
       <div><h4>Explore</h4><a href="#buying">Open requirements</a><a href="#projects">Projects</a><a href="#categories">Categories</a></div>
-      <div id="faq-search"><h4>Help</h4><a href="#search" data-lp-try-link="how do I become a supplier">Becoming a supplier</a><a href="#search" data-lp-try-link="when do you pay">Payment terms</a><a href="#search" data-lp-try-link="how do you choose a vendor">How vendors are chosen</a></div>
+      <div id="faq-search"><h4>Help</h4><a href="#search" data-lp-try-link="how do I become a supplier?">Becoming a supplier</a><a href="#search" data-lp-try-link="when do you pay suppliers?">Payment terms</a><a href="#search" data-lp-try-link="how do you choose a supplier?">How vendors are chosen</a></div>
     </div>
     <p class="lp-copy">© {{ 'now'|date('Y') }} Infra Radar (prototype). All companies and figures shown are fictional. Construction photos from Unsplash.</p>
   </footer>
+
+  {# Answer screen: opens over the page when someone asks a question. #}
+  <div class="ae" data-ae hidden role="dialog" aria-modal="true" aria-label="Answer">
+    <div class="ae-scroll" data-ae-scroll>
+      <div class="ae-thread" data-ae-thread aria-live="polite"></div>
+    </div>
+    <button type="button" class="ae-x" data-ae-close aria-label="Close answers"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="ae-dock">
+      <form class="ae-input" data-ae-form role="search">
+        <span class="lp-orb" aria-hidden="true"></span>
+        <input type="search" data-ae-input placeholder="Please ask a question or initiate a search" aria-label="Ask a question" autocomplete="off">
+        <button type="submit" class="ae-send" data-ae-send aria-label="Search">
+          <svg class="ae-send-go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <span class="ae-send-stop" aria-hidden="true"></span>
+        </button>
+      </form>
+      <p class="ae-note">Answers come from our own search index and may be incomplete; please check details before quoting.</p>
+    </div>
+  </div>
 </div>
