@@ -4,7 +4,7 @@ namespace Drupal\sthira;
 
 /**
  * Bids: invite suppliers, collect their prices, close bidding, choose a
- * winner, get the Director's approval, place the order.
+ * winner, get the approval of the PM who raised the request, place the order.
  *
  * Every bid comes from a supplier, in the supplier portal. Bidding closes when
  * every invited supplier has bid, or when Procurement closes it early.
@@ -100,10 +100,10 @@ class Bidding {
   }
 
   /**
-   * Chooses the winning bid. It then waits for the Director's approval.
+   * Chooses the winning bid. It then waits for the PM's approval.
    *
    * @return string
-   *   The new stage: 'director_review'.
+   *   The new stage: 'order_review'.
    */
   public function award(int $id, int $bidId, int $uid, ?int $time = NULL): string {
     $time = $time ?? time();
@@ -119,27 +119,27 @@ class Bidding {
     $this->repo->settleBids($id, $bidId);
     $this->repo->log($id, $uid, 'awarded', 'Chose ' . $vendor['name'] . '\'s bid: ' . Format::inr($bid['rate']) . ' per ' . Format::per($r['unit']) . ', delivers in ' . $bid['lead_days'] . ' days, total ' . Format::inr($amount) . '.' . ($followed ? ' The suggested best bid.' : ' Chose differently from the suggested ' . $ranked[0]['name'] . '.'), $time);
 
-    $this->repo->updateRequest($id, ['stage' => 'director_review', 'updated' => $time]);
-    return 'director_review';
+    $this->repo->updateRequest($id, ['stage' => 'order_review', 'updated' => $time]);
+    return 'order_review';
   }
 
   /**
-   * Director approves the order; it is placed at once.
+   * The PM who raised the request approves the order; it is placed at once.
    */
   public function approveOrder(int $id, int $uid, string $comment = '', ?int $time = NULL): void {
     $time = $time ?? time();
     $this->repo->updateRequest($id, ['approved_director' => $uid, 'updated' => $time]);
-    $this->repo->log($id, $uid, 'director_approved', 'Order approved by the Director' . ($comment ? ': ' . $comment : '.'), $time);
+    $this->repo->log($id, $uid, 'order_approved', 'Approved the order' . ($comment ? ': ' . $comment : '.'), $time);
     $this->issueOrder($id, $uid, $time + 60);
   }
 
   /**
-   * Director rejects the choice and sends it back to Procurement.
+   * The PM rejects the choice and sends it back to Procurement.
    */
   public function sendBack(int $id, int $uid, string $reason): void {
     $this->repo->updateRequest($id, ['stage' => 'bidding', 'vendor_id' => NULL, 'po_rate' => NULL, 'po_amount' => NULL]);
     $this->repo->settleBids($id, NULL);
-    $this->repo->log($id, $uid, 'sent_back', 'Rejected by the Director and sent back to Procurement: ' . $reason);
+    $this->repo->log($id, $uid, 'sent_back', 'Rejected the winning bid and sent it back to Procurement: ' . $reason);
   }
 
   /**

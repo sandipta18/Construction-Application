@@ -20,7 +20,7 @@ class LimitsForm extends FormBase {
     $form['#attributes']['class'][] = 'limits-form';
     $form['rule'] = [
       '#type' => 'inline_template',
-      '#template' => '<p class="muted">Every winning bid is approved by the Director before the order is placed.</p>',
+      '#template' => '<p class="muted">Every winning bid is approved by the project manager who raised the request before the order is placed.</p>',
     ];
     $form['demo_mode'] = [
       '#type' => 'checkbox',

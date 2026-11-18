@@ -82,7 +82,7 @@
           <div><dt>Needed by</dt><dd>{{ r.needed_by }}</dd></div>
           <div><dt>Estimated cost</dt><dd>{{ r.est_amount ?: '🔒 Hidden for your role' }}</dd></div>
           <div><dt>Asked by</dt><dd>{{ r.by.name }}</dd></div>
-          <div><dt>Approved by</dt><dd>{{ r.needs_director ? 'Project manager, then Director' : 'Project manager' }}</dd></div>
+          <div><dt>Approved by</dt><dd>Project manager (raised it, then approves the order)</dd></div>
           {% if r.po %}
             <div><dt>Supplier</dt><dd>{{ r.po.vendor }}</dd></div>
             <div><dt>Order</dt><dd>{{ r.po.number }}{% if r.po.amount %} · {{ r.po.amount }}{% endif %}</dd></div>

@@ -233,6 +233,9 @@ class AppController extends ControllerBase {
 
   public function dashboard() {
     $a = $this->currentUser();
+    if ($this->roleKey($a) === 'director' && $a->hasPermission('view director dashboard')) {
+      return $this->directorDashboard($a);
+    }
     $pids = $this->repo->accessibleProjectIds($a);
     $me = $this->repo->person((int) $a->id());
     $finance = $a->hasPermission('view finance');
@@ -265,10 +268,33 @@ class AppController extends ControllerBase {
     ];
   }
 
+  /**
+   * The Director's overview: charts of spend, budgets, pipeline, suppliers.
+   */
+  protected function directorDashboard($a): array {
+    $me = $this->repo->person((int) $a->id());
+    $hour = (int) date('G');
+    $greet = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
+    $overview = (new \Drupal\sthira\Overview($this->repo, $this->workflow, $this->assistant))->build();
+    $insights = $this->assistant->insights($a);
+    $logs = array_values(array_filter($this->repo->logs(NULL, 60), fn($l) => !in_array($l['action'], ['notified', 'bid_received', 'settings'], TRUE)));
+    return [
+      '#theme' => 'sthira_director_dashboard',
+      '#greeting' => $greet . ', ' . explode(' ', $me['name'])[0],
+      '#o' => $overview,
+      '#insights' => array_slice($this->insightRows($insights), 0, 4),
+      '#insight_count' => count($insights),
+      '#activity' => array_slice($this->logRows($logs), 0, 7),
+      '#urls' => $this->urls(),
+      '#attached' => ['library' => ['sthira/overview']],
+      '#cache' => ['max-age' => 0],
+    ];
+  }
+
   protected function kpis(string $role, $a, array $pids, array $queue, array $insights): array {
     $all = $this->repo->requests($pids);
     $open = array_filter($all, fn($r) => in_array($r['stage'], Repository::OPEN_STAGES, TRUE));
-    $inApproval = array_filter($all, fn($r) => in_array($r['stage'], ['pm_review', 'director_review'], TRUE));
+    $inApproval = array_filter($all, fn($r) => in_array($r['stage'], ['pm_review', 'order_review'], TRUE));
     $monthStart = strtotime(date('Y-m-01'));
     $ordered = array_filter($all, fn($r) => !empty($r['po_amount']));
     $savings = array_sum(array_map(fn($r) => (float) $r['est_amount'] - (float) $r['po_amount'], $ordered));
@@ -321,7 +347,7 @@ class AppController extends ControllerBase {
     $queue = $this->workflow->queue($a);
     $tabs = [
       'queue' => ['Waiting on me', NULL],
-      'open' => ['In progress', ['pm_review', 'approved', 'bidding', 'director_review', 'ordered', 'received', 'invoiced']],
+      'open' => ['In progress', ['pm_review', 'approved', 'bidding', 'order_review', 'ordered', 'received', 'invoiced']],
       'closed' => ['Closed', ['paid', 'rejected']],
     ];
     if (!$this->workflow->queueStages($a)) {
@@ -444,7 +470,6 @@ class AppController extends ControllerBase {
       'est_amount' => $finance ? Format::inr($r['est_amount']) : NULL,
       'amount' => $finance ? Format::inr($r['po_amount'] ?: $r['est_amount']) : NULL,
       'amount_label' => $r['po_amount'] ? 'Order value' : 'Estimated cost',
-      'needs_director' => $this->workflow->needsDirector($r),
       'po' => $r['po_number'] ? [
         'number' => $r['po_number'],
         'vendor' => $vendor['name'] ?? '',
@@ -678,7 +703,8 @@ class AppController extends ControllerBase {
       'approve requests' => 'Approve requests',
       'issue purchase orders' => 'Invite bids & order',
       'access vendor portal' => 'Bid',
-      'approve high value requests' => 'Approve orders',
+      'approve orders' => 'Approve orders',
+      'view director dashboard' => 'Overview charts',
       'receive goods' => 'Confirm delivery',
       'process invoices' => 'Check bill & pay',
       'approve vendors' => 'Verify vendors',
@@ -821,8 +847,10 @@ class AppController extends ControllerBase {
     $labels = [
       'created' => ['Raised', 'neutral'],
       'pm_approved' => ['Approved', 'ok'],
-      'director_approved' => ['Approved', 'ok'],
+      'order_approved' => ['Approved', 'ok'],
       'rejected' => ['Rejected', 'bad'],
+      'sent_back' => ['Sent back', 'bad'],
+      'project' => ['Project', 'info'],
       'po_issued' => ['PO issued', 'info'],
       'received' => ['Delivered', 'info'],
       'invoice_checked' => ['Invoice', 'violet'],
@@ -859,6 +887,10 @@ class AppController extends ControllerBase {
    */
   protected function editUrl(int $nid): ?string {
     $node = $this->entityTypeManager()->getStorage('node')->load($nid);
+    // Projects have their own short form.
+    if ($node && $node->bundle() === 'project') {
+      return $node->access('update') ? Url::fromRoute('sthira.project_edit', ['id' => $nid])->toString() : NULL;
+    }
     return $node && $node->access('update')
       ? Url::fromRoute('entity.node.edit_form', ['node' => $nid], ['query' => ['destination' => $this->getRequestPath()]])->toString()
       : NULL;
@@ -882,7 +914,10 @@ class AppController extends ControllerBase {
     $handler = $this->entityTypeManager()->getAccessControlHandler('node');
     $out = [];
     foreach ($bundles as $bundle) {
-      if ($handler->createAccess($bundle, $this->currentUser())) {
+      if ($bundle === 'project' && $handler->createAccess($bundle, $this->currentUser())) {
+        $out[] = ['label' => $labels[$bundle], 'url' => Url::fromRoute('sthira.project_new')->toString()];
+      }
+      elseif ($handler->createAccess($bundle, $this->currentUser())) {
         $out[] = [
           'label' => $labels[$bundle],
           'url' => Url::fromRoute('node.add', ['node_type' => $bundle], ['query' => ['destination' => $back]])->toString(),

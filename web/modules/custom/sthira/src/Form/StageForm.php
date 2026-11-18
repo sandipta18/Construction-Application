@@ -122,8 +122,9 @@ class StageForm extends FormBase {
         }
         $waiting = $pending;
         $text = 'Bidding is closed with ' . count($ranked) . ' of ' . count($r['invited']) . ' bids. The assistant ranked them and picked the best overall value; you can choose another.';
-        $text .= ' The Director approves your choice before the order is placed.';
-        // If the Director sent the last choice back, show why.
+        $approvers = implode(' or ', array_map(fn($u) => $this->repo->person($u)['name'], $this->workflow->orderApprovers($r))) ?: 'the project manager';
+        $text .= ' ' . $approvers . ' (who raised this request) approves your choice before the order is placed.';
+        // If the PM sent the last choice back, show why.
         foreach ($this->repo->logs((int) $id, 50) as $l) {
           if (in_array($l['action'], ['awarded', 'bids_invited'], TRUE)) {
             break;
@@ -131,8 +132,11 @@ class StageForm extends FormBase {
           if ($l['action'] === 'sent_back') {
             $form['sent_back'] = [
               '#type' => 'inline_template',
-              '#template' => '<div class="notice notice--bad"><strong>Rejected by the Director.</strong> {{ text }}</div>',
-              '#context' => ['text' => preg_replace('/^Rejected by the Director and sent back to Procurement: /', '', $l['message'])],
+              '#template' => '<div class="notice notice--bad"><strong>{{ who }}</strong> {{ text }}</div>',
+              '#context' => [
+                'who' => 'Rejected by ' . $this->repo->person((int) $l['uid'])['name'] . '.',
+                'text' => preg_replace('/^Rejected the winning bid and sent it back to Procurement: /', '', $l['message']),
+              ],
               '#weight' => -10,
             ];
             break;
@@ -153,16 +157,16 @@ class StageForm extends FormBase {
         $form['actions'] = ['#type' => 'actions'];
         $form['actions']['award'] = [
           '#type' => 'submit',
-          '#value' => 'Send to Director',
+          '#value' => 'Send for approval',
           '#name' => 'award',
           '#attributes' => ['class' => ['btn', 'btn-primary']],
         ];
         break;
 
-      case 'director_review':
+      case 'order_review':
         $vendor = $this->repo->vendor((int) $r['vendor_id']);
         $form['intro'] = $this->intro('Approve this order?', sprintf(
-          'Procurement chose %s: %s per %s, total %s. Approve to place the order, or reject it and send it back to Procurement with a reason.',
+          'You raised this request. Procurement chose %s: %s per %s, total %s. Approve to place the order, or reject it and send it back to Procurement with a reason.',
           $vendor['name'] ?? 'a supplier', Format::inr($r['po_rate']), Format::per($unit), Format::inr($r['po_amount'])
         ));
         $form['comment'] = [
@@ -188,7 +192,7 @@ class StageForm extends FormBase {
         break;
 
       case 'ordered':
-        $form['intro'] = $this->intro('Confirm delivery', 'Did everything arrive at site? Change the number only if less came.');
+        $form['intro'] = $this->intro('Confirm delivery', 'Did everything arrive at your site? Change the number only if less came. Procurement will check the supplier\'s bill against what you confirm.');
         $form['received_qty'] = [
           '#type' => 'number',
           '#title' => 'Quantity that arrived (' . $unit . ')',
@@ -345,7 +349,7 @@ class StageForm extends FormBase {
         $stage = $this->bidding->award($id, (int) $form_state->getValue('bid'), $uid);
         $r2 = $this->repo->request($id);
         $vendor = $this->repo->vendor((int) $r2['vendor_id']);
-        $msg = 'Winner chosen: ' . ($vendor['name'] ?? '') . ' for ' . Format::inr($r2['po_amount']) . '. Sent to the Director for approval.';
+        $msg = 'Winner chosen: ' . ($vendor['name'] ?? '') . ' for ' . Format::inr($r2['po_amount']) . '. Sent to ' . (implode(' or ', array_map(fn($u) => $this->repo->person($u)['name'], $this->workflow->orderApprovers($r2))) ?: 'the project manager') . ' for approval.';
         break;
 
       case 'reject':

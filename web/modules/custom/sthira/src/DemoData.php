@@ -39,8 +39,8 @@ class DemoData {
     ['Which documents do I need to register?', 'GST certificate, PAN card, a cancelled cheque for your bank account, and an MSME certificate if you have one. PDF or image files up to 5 MB each.', 'documents, papers, kyc, gst certificate, pan card, msme, cancelled cheque, upload'],
     ['How long does verification take?', 'Usually 1 to 2 working days. You can track the status in your vendor portal, and we email you when it is decided. If something is missing, we tell you what to fix and you can resubmit.', 'verification, approval, pending, status, rejected, how long, waiting'],
     ['When do suppliers get paid?', 'Within 30 days of a matched invoice. We check every invoice against the purchase order and what was actually delivered at site, then release payment for the quantity received.', 'payment, paid, pay, payment terms, credit period, money, invoice, settlement, dues'],
-    ['How do you choose a supplier?', 'Every requirement goes out for bids to the approved suppliers of that material. Each bid is scored on price, on-time delivery record and quality rating, and on whether it arrives before the site needs it. The best overall value wins, not just the lowest price. Every order is also approved by our Director before it is placed.', 'choose, selection, criteria, win, lowest price, compare, quotation, bid, bidding, rfq, tender, l1, auction'],
-    ['Where do I deliver materials?', 'To the project site named on the purchase order. Our procurement officer confirms what arrives at site, and that delivery record is what your invoice is matched against.', 'deliver, delivery, dispatch, site address, transport, logistics, unloading'],
+    ['How do you choose a supplier?', 'Every requirement goes out for bids to the approved suppliers of that material. Each bid is scored on price, on-time delivery record and quality rating, and on whether it arrives before the site needs it. The best overall value wins, not just the lowest price. Every order is also approved by the project manager who raised the request before it is placed.', 'choose, selection, criteria, win, lowest price, compare, quotation, bid, bidding, rfq, tender, l1, auction'],
+    ['Where do I deliver materials?', 'To the project site named on the purchase order. Our project manager confirms what arrives at site, and that delivery record is what your invoice is matched against.', 'deliver, delivery, dispatch, site address, transport, logistics, unloading'],
     ['Can I update my rates?', 'Yes. Approved suppliers manage their own rates and lead times in the vendor portal, and the latest rates are used when we compare vendors for an order.', 'rates, price list, update price, change rate, lead time, quotation'],
     ['Do you work with small suppliers and MSMEs?', 'Yes. Any GST-registered business can register. MSME suppliers are welcome, and we follow the MSME payment timelines.', 'msme, small business, local supplier, new supplier, startup, trader, dealer'],
     ['Who do I contact about an order?', 'Your purchase order names the procurement officer handling it. You can also see every order and its delivery and payment status in your vendor portal.', 'contact, support, help, phone, email, order status, purchase order, po'],
@@ -199,6 +199,18 @@ class DemoData {
     // Requests: project, item, qty, stage, winning vendor, winning price,
     // hours ago (created), options. Every order went out for bids first.
     $requests = [
+      // Older paid orders, so the Director's charts show a six-month trend.
+      [1, 1, 700, 'paid', 1, 398, 172 * 24, []],
+      [3, 1, 250, 'paid', 10, 410, 165 * 24, ['by' => 'pm2']],
+      [2, 4, 90, 'paid', 5, 1300, 158 * 24, []],
+      [1, 5, 6000, 'paid', 6, 57, 149 * 24, []],
+      [2, 6, 20000, 'paid', 6, 8, 140 * 24, []],
+      [3, 7, 10, 'paid', 7, 2150, 131 * 24, ['by' => 'pm2']],
+      [1, 3, 40, 'paid', 5, 1500, 122 * 24, []],
+      [2, 1, 650, 'paid', 2, 392, 113 * 24, []],
+      [3, 8, 150, 'paid', 8, 390, 104 * 24, ['by' => 'pm2']],
+      [1, 9, 2500, 'paid', 9, 48, 96 * 24, []],
+      [1, 7, 14, 'paid', 7, 2180, 89 * 24, []],
       [1, 2, 20, 'paid', 3, 61800, 82 * 24, []],
       [1, 1, 600, 'paid', 1, 400, 75 * 24, []],
       [1, 2, 22, 'paid', 3, 62200, 58 * 24, []],
@@ -215,8 +227,8 @@ class DemoData {
       [3, 8, 120, 'invoiced', 8, 385, 6 * 24, ['received' => 112, 'invoice_qty' => 120, 'invoice_no' => 'AQF/2026/1187', 'by' => 'pm2']],
       [2, 4, 60, 'ordered', 5, 1290, 4 * 24, []],
       [1, 2, 12, 'received', 4, 66950, 3 * 24, ['priority' => 'urgent', 'note' => 'Emergency top-up for the 9th floor column casting. Konark could not deliver in time.']],
-      // Waiting for the Director: the winning bid is above the limit.
-      [2, 2, 25, 'director_review', 3, 62900, 40, ['note' => 'Raft foundation, grid C to F.']],
+      // Waiting for Ananya (who raised it) to approve the winning bid.
+      [2, 2, 25, 'order_review', 3, 62900, 40, ['note' => 'Raft foundation, grid C to F.']],
       // Open for bids: Shree Balaji (Mahesh) has not bid yet.
       [2, 1, 450, 'bidding', NULL, NULL, 20, ['note' => 'Plinth beams and ground-floor columns.']],
       // Ready for bids.
@@ -235,18 +247,16 @@ class DemoData {
       $rateCard[$q[1]][$q[0]] = [$q[2], $q[3]];
     }
     $poCount = 0;
-    $flow = ['pm_review', 'approved', 'bidding', 'director_review', 'ordered', 'received', 'invoiced', 'paid'];
+    $flow = ['pm_review', 'approved', 'bidding', 'order_review', 'ordered', 'received', 'invoiced', 'paid'];
 
     foreach ($requests as [$pid, $itemId, $qty, $stage, $vendorId, $poRate, $hoursAgo, $opt]) {
       $item = $items[$itemId];
       $estAmount = (int) round($qty * $item[3]);
       $poAmount = $poRate ? (int) round($qty * $poRate) : 0;
-      // The Director approves every order.
-      $needsDirector = TRUE;
       $by = isset($opt['by']) ? $uids[$opt['by']] : $pmFor[$pid];
       $t = $now - $hoursAgo * 3600 - 1800;
       $needed = date('Y-m-d', $t + 7 * 86400);
-      if (in_array($stage, ['approved', 'bidding', 'director_review'], TRUE)) {
+      if (in_array($stage, ['approved', 'bidding', 'order_review'], TRUE)) {
         $needed = $d(6);
       }
       $reached = array_search($stage, $flow, TRUE);
@@ -269,9 +279,7 @@ class DemoData {
         $plan['awarded'] = 18;
       }
       if ($reached >= 4) {
-        if ($needsDirector) {
-          $plan['director_approved'] = 5;
-        }
+        $plan['order_approved'] = 5;
         $plan['po_issued'] = 0.2;
       }
       foreach (['received' => [5, 60], 'invoice_checked' => [6, 20], 'paid' => [7, 70]] as $ev => [$idx, $gap]) {
@@ -313,8 +321,8 @@ class DemoData {
       if (isset($events['awarded'])) {
         $values += ['vendor_id' => $V[$vendorId], 'po_rate' => $poRate, 'po_amount' => $poAmount, 'bids_closed' => $events['awarded'] - 1800];
       }
-      if (isset($events['director_approved'])) {
-        $values['approved_director'] = $uids['director'];
+      if (isset($events['order_approved'])) {
+        $values['approved_director'] = $by;
       }
       if (isset($events['po_issued'])) {
         $poCount++;
@@ -379,25 +387,25 @@ class DemoData {
         if (isset($events['awarded'])) {
           $repo->log($rid, 0, 'bids_closed', 'All ' . count($invited) . ' invited suppliers have bid. Bidding closed.', $events['awarded'] - 1800);
           $repo->settleBids($rid, $winnerBid);
-          $repo->log($rid, $uids['procurement'], 'awarded', 'Chose ' . $vendors[$vendorId][0] . '\'s bid: ' . Format::inr($poRate) . ' per ' . Format::per($unit) . ', total ' . Format::inr($poAmount) . '.' . ($needsDirector ? ' Sent to the Director for approval.' : ''), $events['awarded']);
+          $repo->log($rid, $uids['procurement'], 'awarded', 'Chose ' . $vendors[$vendorId][0] . '\'s bid: ' . Format::inr($poRate) . ' per ' . Format::per($unit) . ', total ' . Format::inr($poAmount) . '. Sent to ' . $repo->person($by)['name'] . ' for approval.', $events['awarded']);
         }
       }
-      foreach (['director_approved', 'po_issued', 'received', 'invoice_checked', 'paid'] as $ev) {
+      foreach (['order_approved', 'po_issued', 'received', 'invoice_checked', 'paid'] as $ev) {
         if (!isset($events[$ev])) {
           continue;
         }
         $time = $events[$ev];
         match ($ev) {
-          'director_approved' => $repo->log($rid, $uids['director'], 'director_approved', 'Order approved by the Director.', $time),
+          'order_approved' => $repo->log($rid, $by, 'order_approved', 'Approved the order.', $time),
           'po_issued' => $repo->log($rid, $uids['procurement'], 'po_issued', 'Order ' . $values['po_number'] . ' placed with ' . $vendors[$vendorId][0] . ' for ' . Format::inr($poAmount) . '.', $time),
-          'received' => $repo->log($rid, $uids['procurement'], 'received', 'Delivery confirmed: ' . Format::qty($values['received_qty']) . ' ' . $unit . ' arrived at site.', $time),
+          'received' => $repo->log($rid, $by, 'received', 'Delivery confirmed: ' . Format::qty($values['received_qty']) . ' ' . $unit . ' arrived at site.', $time),
           'invoice_checked' => $repo->log($rid, $uids['procurement'], 'invoice_checked', 'Bill ' . $values['invoice_no'] . ' checked against the order and the delivery: ' . ($values['match_status'] === 'matched' ? 'everything matches.' : 'it does not match.'), $time),
           'paid' => $repo->log($rid, $uids['procurement'], 'paid', 'Paid ' . Format::inr($values['paid_amount']) . ' to ' . $vendors[$vendorId][0] . '.', $time),
         };
       }
     }
     $repo->log(0, $uids['sunrise'], 'vendor_registered', 'Sunrise Steel Traders registered as a vendor. Waiting for procurement to verify.', $now - 26 * 3600);
-    $repo->log(0, $uids['admin'], 'settings', 'Approval rule set: the Director approves every order before it is placed.', $now - 90 * 86400);
+    $repo->log(0, $uids['admin'], 'settings', 'Approval rule set: the project manager who raised a request approves the winning bid before the order is placed.', $now - 90 * 86400);
   }
 
   /**

@@ -205,7 +205,7 @@
 
   function routeText(s, project, amount) {
     const pm = project ? project.pm : 'the PM';
-    return 'Next: suppliers bid, Procurement picks the best, then ' + escapeHtml(s.director) + ' approves the order';
+    return 'Next: suppliers bid, Procurement picks the best, then you approve the order';
   }
 
   function render(result, s) {

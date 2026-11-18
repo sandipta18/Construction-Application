@@ -19,7 +19,6 @@ permissions:
   - 'issue purchase orders'
   - 'approve vendors'
   - 'process invoices'
-  - 'receive goods'
   - 'view audit log'
   - 'manage search index'
   - 'view finance'

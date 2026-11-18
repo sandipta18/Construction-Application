@@ -1,0 +1,194 @@
+{#
+  The Director's overview. Charts are plain HTML and CSS: one blue for data,
+  status colours only with an icon and a word, a table behind every chart.
+#}
+{% set warn_icon %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v4M12 17.5v.01"/></svg>{% endset %}
+{% set ok_icon %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{% endset %}
+<div class="page ov">
+  <header class="page-head">
+    <div>
+      <h1>{{ greeting }}</h1>
+      <p class="sub">Here is everything across your projects, as of {{ o.as_of }}.</p>
+    </div>
+    <a class="btn btn-ghost" href="{{ urls.requests }}">All requests</a>
+  </header>
+
+  {# Headline: one hero number, four supporting figures. #}
+  <section class="ov-top">
+    <div class="ov-card ov-hero">
+      <span class="ov-label">{{ o.hero.label }}</span>
+      <span class="ov-hero-value">{{ o.hero.value }}</span>
+      <span class="ov-hero-sub">{{ o.hero.sub }}</span>
+      <div class="ov-meter" role="img" aria-label="{{ o.hero.pct }}% of the material budget is ordered">
+        <span style="width: {{ o.hero.meter }}%"></span>
+      </div>
+      <span class="ov-meter-note"><strong>{{ o.hero.pct }}%</strong> of the budget is ordered</span>
+    </div>
+    <div class="ov-tiles">
+      {% for t in o.tiles %}
+        <div class="ov-card ov-tile">
+          <span class="ov-label">{{ t.label }}</span>
+          <span class="ov-tile-value">{{ t.value }}</span>
+          <span class="ov-tile-sub{% if t.tone == 'ok' %} ov-good{% endif %}">{% if t.tone == 'ok' %}{{ ok_icon }} {% endif %}{{ t.sub }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="ov-grid">
+    {# Orders by month: columns. #}
+    <article class="ov-card ov-chart">
+      <header class="ov-chart-head">
+        <h2>Orders placed each month</h2>
+        <p>{{ o.months.total }} in {{ o.months.count }} orders over the last six months</p>
+      </header>
+      <div class="ov-cols" role="img" aria-label="Column chart of orders placed per month for the last six months">
+        <div class="ov-cols-axis" aria-hidden="true">
+          {% for t in o.months.ticks %}<em style="bottom: {{ t.at }}%">{{ t.label }}</em>{% endfor %}
+        </div>
+        <div class="ov-cols-plot">
+          {% for t in o.months.ticks %}<span class="ov-gridline{{ t.at == 0 ? ' is-base' : '' }}" style="bottom: {{ t.at }}%" aria-hidden="true"></span>{% endfor %}
+          {% for m in o.months.rows %}
+            <div class="ov-col">
+              <div class="ov-col-area">
+                {% if m.current or m.peak %}<b class="ov-col-val{{ m.current ? " is-current" : "" }}" style="bottom: {{ m.h }}%">{{ m.amount }}</b>{% endif %}
+                <span class="ov-col-bar{% if m.value == 0 %} is-zero{% endif %}" style="height: {{ m.h }}%" tabindex="0" data-tip="{{ m.long }}{{ m.current ? ' (so far)' : '' }}|{{ m.full }}|{{ m.count }} order{{ m.count == 1 ? '' : 's' }}" aria-label="{{ m.long }}: {{ m.full }}, {{ m.count }} orders"></span>
+              </div>
+              <span class="ov-col-label">{{ m.label }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <details class="ov-table">
+        <summary>View as table</summary>
+        <table><thead><tr><th>Month</th><th class="num">Orders</th><th class="num">Amount</th></tr></thead><tbody>
+          {% for m in o.months.rows %}<tr><td>{{ m.long }}</td><td class="num">{{ m.count }}</td><td class="num">{{ m.full }}</td></tr>{% endfor %}
+        </tbody></table>
+      </details>
+    </article>
+
+    {# Budget per project: meters. #}
+    <article class="ov-card ov-chart">
+      <header class="ov-chart-head">
+        <h2>Budget used by project</h2>
+        <p>Material orders placed so far against each project's budget</p>
+      </header>
+      <ul class="ov-meters">
+        {% for p in o.projects %}
+          <li>
+            <div class="ov-meter-head">
+              <a href="{{ p.url }}"><strong>{{ p.name }}</strong></a>
+              <span class="ov-num"><strong>{{ p.spent }}</strong> of {{ p.budget }}</span>
+            </div>
+            <div class="ov-meter ov-meter--{{ p.state }}" tabindex="0" data-tip="{{ p.name }}|{{ p.spent }} of {{ p.budget }} ({{ p.pct }}%)|Site {{ p.progress }}% built" aria-label="{{ p.name }}: {{ p.pct }}% of budget used">
+              <span style="width: {{ p.fill }}%"></span>
+            </div>
+            <div class="ov-meter-foot">
+              <span>{{ p.city }} · site {{ p.progress }}% built</span>
+              {% if p.state == 'critical' %}
+                <span class="ov-status ov-status--critical">{{ warn_icon }} Over budget · {{ p.pct }}%</span>
+              {% elseif p.state == 'warning' %}
+                <span class="ov-status ov-status--warning">{{ warn_icon }} Close to budget · {{ p.pct }}%</span>
+              {% else %}
+                <span class="ov-status">{{ p.pct }}% used</span>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </article>
+
+    {# Spend by category: horizontal bars. #}
+    <article class="ov-card ov-chart">
+      <header class="ov-chart-head">
+        <h2>Spending by material type</h2>
+        {% if o.categories %}<p>{{ o.categories[0].label }} is {{ o.categories[0].share }}% of everything ordered</p>{% endif %}
+      </header>
+      <ul class="ov-bars">
+        {% for c in o.categories %}
+          <li>
+            <span class="ov-bar-label">{{ c.label }}</span>
+            <span class="ov-bar-track"><span class="ov-bar" style="width: {{ c.w }}%" tabindex="0" data-tip="{{ c.label }}|{{ c.full }}|{{ c.share }}% of spend · {{ c.count }} orders" aria-label="{{ c.label }}: {{ c.full }}"></span><b>{{ c.amount }}</b></span>
+          </li>
+        {% endfor %}
+      </ul>
+      <details class="ov-table">
+        <summary>View as table</summary>
+        <table><thead><tr><th>Material type</th><th class="num">Orders</th><th class="num">Amount</th><th class="num">Share</th></tr></thead><tbody>
+          {% for c in o.categories %}<tr><td>{{ c.label }}</td><td class="num">{{ c.count }}</td><td class="num">{{ c.full }}</td><td class="num">{{ c.share }}%</td></tr>{% endfor %}
+        </tbody></table>
+      </details>
+    </article>
+
+    {# Pipeline: where requests are now. #}
+    <article class="ov-card ov-chart">
+      <header class="ov-chart-head">
+        <h2>Where requests are now</h2>
+        <p>{{ o.pipeline.open }} requests in progress · {{ o.pipeline.done }} paid in the last 30 days</p>
+      </header>
+      <ul class="ov-bars ov-bars--steps">
+        {% for s in o.pipeline.rows %}
+          <li class="{{ s.count == 0 ? 'is-empty' : '' }}">
+            <span class="ov-bar-label"><i>{{ loop.index }}</i>{{ s.label }}</span>
+            <span class="ov-bar-track">{% if s.count %}<span class="ov-bar" style="width: {{ s.w }}%" tabindex="0" data-tip="{{ s.label }}|{{ s.count }} request{{ s.count == 1 ? '' : 's' }}|{{ s.full }} in value" aria-label="{{ s.label }}: {{ s.count }} requests"></span>{% endif %}<b>{{ s.count }}</b></span>
+          </li>
+        {% endfor %}
+      </ul>
+      <details class="ov-table">
+        <summary>View as table</summary>
+        <table><thead><tr><th>Step</th><th class="num">Requests</th><th class="num">Value</th></tr></thead><tbody>
+          {% for s in o.pipeline.rows %}<tr><td>{{ s.label }}</td><td class="num">{{ s.count }}</td><td class="num">{{ s.full }}</td></tr>{% endfor %}
+        </tbody></table>
+      </details>
+    </article>
+
+    {# Suppliers. #}
+    <article class="ov-card ov-chart">
+      <header class="ov-chart-head">
+        <h2>Top suppliers</h2>
+        <p>By value of orders placed, with their on-time delivery record</p>
+      </header>
+      <ul class="ov-suppliers">
+        {% for s in o.suppliers %}
+          <li>
+            <div class="ov-sup-name"><strong>{{ s.name }}</strong><small>{{ s.what }} · {{ s.orders }} order{{ s.orders == 1 ? '' : 's' }}</small></div>
+            <span class="ov-bar-track ov-sup-bar"><span class="ov-bar" style="width: {{ s.w }}%" tabindex="0" data-tip="{{ s.name }}|{{ s.full }} in {{ s.orders }} orders|On time {{ s.on_time }}% · rating {{ s.rating }} of 5" aria-label="{{ s.name }}: {{ s.full }}"></span><b>{{ s.amount }}</b></span>
+            <span class="ov-sup-meta">
+              {% if s.on_time_state == 'good' %}<span class="ov-status">{{ s.on_time }}% on time</span>{% else %}<span class="ov-status ov-status--{{ s.on_time_state }}">{{ warn_icon }} {{ s.on_time }}% on time</span>{% endif %}
+              <span class="ov-rating" aria-label="Rating {{ s.rating }} of 5">★ {{ s.rating }}</span>
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    </article>
+
+    {# What needs a look. #}
+    <article class="ov-card ov-chart">
+      <header class="ov-chart-head">
+        <h2><span class="ai-tag">AI</span> Needs your attention</h2>
+        <p>{% if insight_count %}{{ insight_count }} thing{{ insight_count == 1 ? '' : 's' }} the assistant spotted{% else %}Nothing to worry about right now{% endif %}</p>
+      </header>
+      {% if insights %}
+        {% include '@sthira/sthira-insight-list.html.twig' with { insights: insights } %}
+        {% if insight_count > 4 %}<a class="link ov-more" href="{{ urls.insights }}">All {{ insight_count }} tips →</a>{% endif %}
+      {% endif %}
+    </article>
+  </section>
+
+  <section class="ov-card ov-activity">
+    <header class="ov-chart-head ov-chart-head--row">
+      <div><h2>Latest activity</h2><p>What the team did most recently</p></div>
+      <a class="link" href="{{ urls.audit }}">Full history →</a>
+    </header>
+    <ul class="ov-feed">
+      {% for l in activity %}
+        <li>
+          <span class="avatar sm">{{ l.who.initials }}</span>
+          <span class="ov-feed-text"><strong>{{ l.who.name }}</strong> {{ l.message }}{% if l.url and l.ref %} <a class="link" href="{{ l.url }}">{{ l.ref }}</a>{% endif %}</span>
+          <time title="{{ l.time }}">{{ l.ago }}</time>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+<div class="ov-tip" data-ov-tip role="tooltip" hidden></div>

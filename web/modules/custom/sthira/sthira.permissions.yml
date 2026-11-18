@@ -6,9 +6,10 @@ view all projects:
 raise requests:
   title: 'Raise material requests'
 approve requests:
-  title: 'Approve requests up to the PM approval limit'
-approve high value requests:
-  title: 'Approve requests above the PM approval limit'
+  title: 'Approve new material requests for their projects'
+approve orders:
+  title: 'Approve the winning bid before the order is placed'
+  description: 'Only for requests they raised on their own projects.'
 issue purchase orders:
   title: 'Compare vendors and issue purchase orders'
 receive goods:
@@ -22,6 +23,8 @@ view vendors:
   title: 'View the vendor directory'
 view audit log:
   title: 'View the audit log'
+view director dashboard:
+  title: 'See the director overview with charts'
 manage sthira settings:
   title: 'Manage approval limits'
   restrict access: true

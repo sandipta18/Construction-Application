@@ -231,13 +231,13 @@ class Assistant {
     }
 
     // 4. Approvals waiting too long.
-    foreach ($this->repo->requests($pids, ['pm_review', 'director_review']) as $r) {
+    foreach ($this->repo->requests($pids, ['pm_review', 'order_review']) as $r) {
       $hours = (int) floor((time() - (int) $r['updated']) / 3600);
       if ($hours < 24) {
         continue;
       }
       $item = $items[$r['item_id']];
-      $who = $r['stage'] === 'pm_review' ? 'PM' : 'Director';
+      $who = $r['stage'] === 'pm_review' ? 'PM' : 'PM order';
       $out[] = [
         'type' => 'approval',
         'tag' => 'Approvals',
@@ -249,7 +249,7 @@ class Assistant {
           'label' => 'Review',
           'url' => Url::fromRoute('sthira.request', ['id' => $r['id']])->toString(),
         ],
-        'perms' => [$r['stage'] === 'pm_review' ? 'approve requests' : 'approve high value requests'],
+        'perms' => [$r['stage'] === 'pm_review' ? 'approve requests' : 'approve orders'],
       ];
     }
 
@@ -320,7 +320,7 @@ class Assistant {
     }
 
     // Audience: directors and admins see everything; others see what concerns them.
-    $seeAll = $a->hasPermission('approve high value requests') || $a->hasPermission('manage sthira settings');
+    $seeAll = $a->hasPermission('view all projects') || $a->hasPermission('manage sthira settings');
     if (!$seeAll) {
       $out = array_values(array_filter($out, function ($i) use ($a) {
         foreach ($i['perms'] as $perm) {
@@ -354,7 +354,6 @@ class Assistant {
       ];
     }
     $pmLimit = 0;
-    $directors = array_map(fn($uid) => $this->repo->person($uid)['name'], $this->repo->usersWithRole('director'));
     $pms = $this->repo->usersWithRole('project_manager');
     $projects = [];
     foreach ($this->repo->projects($pids) as $p) {
@@ -390,7 +389,6 @@ class Assistant {
       'projects' => $projects,
       'pmLimit' => $pmLimit,
       'pmLimitLabel' => Format::inr($pmLimit),
-      'director' => $directors ? $directors[0] : 'Director',
       'finance' => $finance,
       'today' => date('Y-m-d'),
     ];

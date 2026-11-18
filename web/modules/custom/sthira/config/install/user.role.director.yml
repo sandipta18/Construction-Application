@@ -19,12 +19,10 @@ is_admin: false
 permissions:
   - 'access sthira app'
   - 'view all projects'
-  - 'raise requests'
-  - 'approve requests'
-  - 'approve high value requests'
   - 'view finance'
   - 'view vendors'
   - 'view audit log'
+  - 'view director dashboard'
   - 'manage search index'
   - 'manage sthira settings'
   - 'access content'

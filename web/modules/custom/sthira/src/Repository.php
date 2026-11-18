@@ -21,7 +21,7 @@ class Repository {
   /**
    * Stages where a request is still moving and stock is not yet on site.
    */
-  const OPEN_STAGES = ['pm_review', 'director_review', 'approved', 'ordered'];
+  const OPEN_STAGES = ['pm_review', 'order_review', 'approved', 'ordered'];
 
   /**
    * Stages where money is committed to a vendor.

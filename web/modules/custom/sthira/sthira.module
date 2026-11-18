@@ -15,6 +15,7 @@ use Drupal\sthira\Icons;
  */
 function sthira_theme() {
   $hooks = [
+    'sthira_director_dashboard' => ['greeting', 'o', 'insights', 'insight_count', 'activity', 'urls'],
     'sthira_dashboard' => ['greeting', 'subtitle', 'role', 'kpis', 'queue', 'queue_count', 'insights', 'insight_count', 'can_raise', 'urls', 'add_links', 'content_url'],
     'sthira_requests' => ['tabs', 'rows', 'can_raise', 'urls', 'finance', 'empty'],
     'sthira_request' => ['r', 'steps', 'action_form', 'waiting', 'reco', 'waiting_bids', 'match', 'budget', 'timeline', 'finance', 'urls'],
@@ -218,6 +219,27 @@ function sthira_form_node_form_alter(&$form, FormStateInterface $form_state) {
     }
     $form['#title'] = $node->bundle() === 'vendor_rate' ? ($node->isNew() ? t('Add a rate') : t('Edit rate')) : t('Company details');
   }
+  if ($node->bundle() === 'project') {
+    // The app has a short project form; this keeps Drupal's own form short too.
+    foreach (['field_code', 'field_contract_value', 'field_progress', 'field_phase'] as $field) {
+      if (isset($form[$field]) && $node->isNew()) {
+        $form[$field]['#access'] = FALSE;
+      }
+    }
+    foreach (array_keys(\Drupal\sthira\Repository::CATEGORIES) as $key) {
+      if (isset($form['field_budget_' . $key])) {
+        $form['field_budget_' . $key]['#access'] = FALSE;
+      }
+    }
+    if (isset($form['field_location']['widget'][0]['value'])) {
+      $form['field_location']['widget'][0]['value']['#required'] = TRUE;
+    }
+    if (isset($form['field_team']['widget']['#options'])) {
+      $pms = \Drupal::service('sthira.repository')->usersWithRole('project_manager');
+      $form['field_team']['widget']['#options'] = array_intersect_key($form['field_team']['widget']['#options'], array_flip($pms));
+      $form['field_team']['widget']['#title'] = t('Project manager');
+    }
+  }
   if ($node->bundle() === 'material_request' && $node->isNew()) {
     $form['#title'] = t('New material request');
     $form['field_stage']['#access'] = FALSE;
@@ -233,6 +255,24 @@ function sthira_form_node_form_alter(&$form, FormStateInterface $form_state) {
 function sthira_node_presave(\Drupal\node\NodeInterface $node) {
   $storage = \Drupal::entityTypeManager()->getStorage('node');
   switch ($node->bundle()) {
+    case 'project':
+      if ($node->get('field_code')->isEmpty()) {
+        $max = 100;
+        foreach ($storage->loadByProperties(['type' => 'project']) as $other) {
+          if (preg_match('/(\d+)$/', (string) $other->get('field_code')->value, $m)) {
+            $max = max($max, (int) $m[1]);
+          }
+        }
+        $node->set('field_code', 'P-' . ($max + 1));
+      }
+      if ($node->get('field_progress')->isEmpty()) {
+        $node->set('field_progress', 0);
+      }
+      if ($node->get('field_phase')->isEmpty()) {
+        $node->set('field_phase', 'Planning');
+      }
+      break;
+
     case 'material_request':
       $material = $node->get('field_material')->entity;
       // New requests start at the raiser's own approval level (the field's

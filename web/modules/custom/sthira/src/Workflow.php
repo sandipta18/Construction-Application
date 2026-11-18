@@ -14,7 +14,7 @@ class Workflow {
     'pm_review' => ['label' => 'Needs approval', 'long' => 'Waiting for the project manager to approve', 'tone' => 'warn'],
     'approved' => ['label' => 'Ready for bids', 'long' => 'Approved · ready to invite bids', 'tone' => 'info'],
     'bidding' => ['label' => 'Collecting bids', 'long' => 'Suppliers are sending their prices', 'tone' => 'info'],
-    'director_review' => ['label' => 'Needs Director', 'long' => 'Winning bid waiting for the Director', 'tone' => 'warn'],
+    'order_review' => ['label' => 'Order approval', 'long' => 'Winning bid waiting for the project manager', 'tone' => 'warn'],
     'ordered' => ['label' => 'Ordered', 'long' => 'Ordered · waiting for delivery', 'tone' => 'info'],
     'received' => ['label' => 'Delivered', 'long' => 'Delivered · bill to be checked', 'tone' => 'violet'],
     'invoiced' => ['label' => 'Ready to pay', 'long' => 'Bill checked · ready to pay', 'tone' => 'violet'],
@@ -29,7 +29,7 @@ class Workflow {
     'pm_review' => 'Approve',
     'approved' => 'Invite bids',
     'bidding' => 'Choose winner',
-    'director_review' => 'Approve order',
+    'order_review' => 'Approve order',
     'ordered' => 'Confirm delivery',
     'received' => 'Check bill',
     'invoiced' => 'Pay supplier',
@@ -40,7 +40,7 @@ class Workflow {
    */
   const STAGE_PERMISSION = [
     'pm_review' => 'approve requests',
-    'director_review' => 'approve high value requests',
+    'order_review' => 'approve orders',
     'approved' => 'issue purchase orders',
     'bidding' => 'issue purchase orders',
     'ordered' => 'receive goods',
@@ -53,20 +53,26 @@ class Workflow {
    */
   const STAGE_ROLE = [
     'pm_review' => 'project_manager',
-    'director_review' => 'director',
+    'order_review' => 'project_manager',
     'approved' => 'procurement_officer',
     'bidding' => 'procurement_officer',
-    'ordered' => 'procurement_officer',
+    'ordered' => 'project_manager',
     'received' => 'procurement_officer',
     'invoiced' => 'procurement_officer',
   ];
 
   /**
-   * Stages scoped to project membership (the project's PM). After the
-   * Director approves an order, Procurement alone handles delivery, the bill
-   * and payment.
+   * Stages scoped to project membership (the project's PM). The PM who raised
+   * the request approves the order and confirms the delivery at site;
+   * Procurement checks the bill and pays. So no one person both orders,
+   * receives and pays.
    */
-  const PROJECT_SCOPED = ['pm_review'];
+  const PROJECT_SCOPED = ['pm_review', 'order_review', 'ordered'];
+
+  /**
+   * Stages that belong to the PM who raised the request.
+   */
+  const RAISER_STAGES = ['order_review', 'ordered'];
 
   public function __construct(protected ConfigFactoryInterface $configFactory, protected Repository $repo) {}
 
@@ -79,10 +85,15 @@ class Workflow {
   }
 
   /**
-   * The Director approves every order before it is placed.
+   * Who approves the order: the PM who raised the request, if they are a PM
+   * on that project; otherwise the project's PMs.
+   *
+   * @return int[]
    */
-  public function needsDirector(array $r): bool {
-    return TRUE;
+  public function orderApprovers(array $r): array {
+    $pms = array_values(array_intersect($this->repo->usersWithRole('project_manager'), $this->repo->members((int) $r['project_id'])));
+    $raiser = (int) ($r['created_by'] ?? 0);
+    return in_array($raiser, $pms, TRUE) ? [$raiser] : $pms;
   }
 
   public static function stage(string $key): array {
@@ -94,6 +105,9 @@ class Workflow {
     if (!$perm || !$a->hasPermission($perm)) {
       return FALSE;
     }
+    if (in_array($r['stage'], self::RAISER_STAGES, TRUE)) {
+      return in_array((int) $a->id(), $this->orderApprovers($r), TRUE);
+    }
     if (in_array($r['stage'], self::PROJECT_SCOPED, TRUE)) {
       return in_array((int) $r['project_id'], $this->repo->accessibleProjectIds($a), TRUE);
     }
@@ -104,9 +118,9 @@ class Workflow {
    * First stage of a new request raised by $a.
    *
    * Raising a request is the raiser's own approval when they could approve
-   * it anyway (the project's PM, or the Director). So a PM's request goes
-   * straight to Procurement for bids. The Director approves the order later,
-   * once Procurement has chosen the winning bid.
+   * it anyway (the project's PM). So a PM's request goes straight to
+   * Procurement for bids. The same PM approves the order later, once
+   * Procurement has chosen the winning bid.
    *
    * @return array
    *   ['stage' => string, 'approved_pm' => ?int, 'approved_director' => ?int]
@@ -122,9 +136,6 @@ class Workflow {
   }
 
   public function queueStages(AccountInterface $a): array {
-    if (in_array('director', $a->getRoles(), TRUE)) {
-      return ['director_review'];
-    }
     $out = [];
     foreach (self::STAGE_PERMISSION as $stage => $perm) {
       if ($a->hasPermission($perm)) {
@@ -162,7 +173,10 @@ class Workflow {
       return NULL;
     }
     $uids = $this->repo->usersWithRole($role);
-    if (in_array($r['stage'], self::PROJECT_SCOPED, TRUE)) {
+    if (in_array($r['stage'], self::RAISER_STAGES, TRUE)) {
+      $uids = $this->orderApprovers($r);
+    }
+    elseif (in_array($r['stage'], self::PROJECT_SCOPED, TRUE)) {
       $uids = array_values(array_intersect($uids, $this->repo->members((int) $r['project_id'])));
     }
     $people = array_map(fn($uid) => $this->repo->person($uid), $uids);
@@ -175,7 +189,7 @@ class Workflow {
         'pm_review' => 'approve it',
         'approved' => 'invite bids from suppliers',
         'bidding' => 'choose the winning bid',
-        'director_review' => 'approve the order',
+        'order_review' => 'approve the order',
         'ordered' => 'confirm the delivery',
         'received' => 'check the bill',
         'invoiced' => 'pay the supplier',
@@ -193,10 +207,8 @@ class Workflow {
       'approved' => 'Invite bids',
       'bidding' => ($r['stage'] === 'bidding' && empty($r['bids_closed'])) ? 'Collect bids' : 'Choose winner',
     ];
-    if ($this->needsDirector($r) || $r['stage'] === 'director_review' || !empty($r['approved_director'])) {
-      $defs['director_review'] = 'Director approval';
-    }
     $defs += [
+      'order_review' => 'Order approval',
       'ordered' => 'Delivery',
       'received' => 'Bill check',
       'invoiced' => 'Payment',
@@ -206,7 +218,7 @@ class Workflow {
       'pm_review' => 'pm_approved',
       'approved' => 'bids_invited',
       'bidding' => 'awarded',
-      'director_review' => 'director_approved',
+      'order_review' => 'order_approved',
       'ordered' => 'received',
       'received' => 'invoice_checked',
       'invoiced' => 'paid',

@@ -19,8 +19,8 @@ settings:
     label: Ready for bids
   - value: bidding
     label: Collecting bids
-  - value: director_review
-    label: Order needs Director approval
+  - value: order_review
+    label: 'Order approval'
   - value: ordered
     label: Ordered
   - value: received

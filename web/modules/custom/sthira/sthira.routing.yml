@@ -41,6 +41,21 @@ sthira.projects:
     _title: 'Projects'
   requirements:
     _permission: 'access sthira app'
+sthira.project_new:
+  path: '/app/projects/new'
+  defaults:
+    _form: '\Drupal\sthira\Form\ProjectForm'
+    _title: 'New project'
+  requirements:
+    _permission: 'create project content'
+sthira.project_edit:
+  path: '/app/projects/{id}/edit'
+  defaults:
+    _form: '\Drupal\sthira\Form\ProjectForm'
+    _title: 'Edit project'
+  requirements:
+    _permission: 'edit any project content'
+    id: '\d+'
 sthira.project:
   path: '/app/projects/{id}'
   defaults:
