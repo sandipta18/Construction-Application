@@ -1,0 +1,153 @@
+<?php
+
+/**
+ * @file
+ * Install, schema and uninstall hooks for Sthira.
+ */
+
+use Drupal\sthira\DemoData;
+
+/**
+ * Implements hook_schema().
+ */
+function sthira_schema() {
+  // Business records are content types (see config/install). The audit log
+  // and the search index (derived from content) are custom tables.
+  $schema['sthira_log'] = [
+    'description' => 'Audit log of every action.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'request_id' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'ref' => ['type' => 'varchar', 'length' => 16, 'not null' => FALSE],
+      'project_id' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'uid' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'action' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => ''],
+      'message' => ['type' => 'text', 'not null' => FALSE],
+      'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'request_id' => ['request_id'],
+      'project_id' => ['project_id'],
+      'created' => ['created'],
+    ],
+  ];
+  $schema['sthira_search'] = [
+    'description' => 'Homepage search index: one row per public document, with its terms and vector.',
+    'fields' => [
+      'id' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'type' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => ''],
+      'entity_id' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'title' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''],
+      'body' => ['type' => 'text', 'size' => 'medium', 'not null' => FALSE],
+      'url' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''],
+      'data' => ['type' => 'text', 'size' => 'medium', 'not null' => FALSE],
+      'terms' => ['type' => 'text', 'size' => 'medium', 'not null' => FALSE],
+      'length' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'hash' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => ''],
+      'vector' => ['type' => 'text', 'size' => 'medium', 'not null' => FALSE],
+      'model' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => ''],
+      'changed' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['id'],
+    'indexes' => ['type' => ['type']],
+  ];
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function sthira_install($is_syncing) {
+  if ($is_syncing) {
+    return;
+  }
+  // App theme as the site's default front-end theme.
+  $themeInstaller = \Drupal::service('theme_installer');
+  $themeInstaller->install(['sthira_theme']);
+  \Drupal::configFactory()->getEditable('system.theme')->set('default', 'sthira_theme')->save();
+
+  // Exactly two blocks in the app theme: messages and main content.
+  $blocks = \Drupal::entityTypeManager()->getStorage('block');
+  foreach ($blocks->loadByProperties(['theme' => 'sthira_theme']) as $block) {
+    $block->delete();
+  }
+  $blocks->create([
+    'id' => 'sthira_theme_messages',
+    'theme' => 'sthira_theme',
+    'region' => 'messages',
+    'plugin' => 'system_messages_block',
+    'weight' => 0,
+    'settings' => ['id' => 'system_messages_block', 'label' => 'Messages', 'label_display' => '0', 'provider' => 'system'],
+  ])->save();
+  $blocks->create([
+    'id' => 'sthira_theme_page_title',
+    'theme' => 'sthira_theme',
+    'region' => 'title',
+    'plugin' => 'page_title_block',
+    'weight' => 0,
+    'settings' => ['id' => 'page_title_block', 'label' => 'Page title', 'label_display' => '0', 'provider' => 'core'],
+  ])->save();
+  $blocks->create([
+    'id' => 'sthira_theme_tabs',
+    'theme' => 'sthira_theme',
+    'region' => 'tabs',
+    'plugin' => 'local_tasks_block',
+    'weight' => 0,
+    'settings' => ['id' => 'local_tasks_block', 'label' => 'Tabs', 'label_display' => '0', 'provider' => 'core', 'primary' => TRUE, 'secondary' => FALSE],
+  ])->save();
+  $blocks->create([
+    'id' => 'sthira_theme_content',
+    'theme' => 'sthira_theme',
+    'region' => 'content',
+    'plugin' => 'system_main_block',
+    'weight' => 0,
+    'settings' => ['id' => 'system_main_block', 'label' => 'Main content', 'label_display' => '0', 'provider' => 'system'],
+  ])->save();
+
+  \Drupal::configFactory()->getEditable('system.site')
+    ->set('page.front', '/home')
+    ->set('name', 'Infra Radar')
+    ->save();
+
+  DemoData::seed(\Drupal::service('sthira.repository'), \Drupal::database(), \Drupal::state());
+
+  // The Site Engineer role was folded into Project Manager.
+  if ($old = \Drupal\user\Entity\Role::load('site_engineer')) {
+    $old->delete();
+  }
+
+  // Construction photos for the homepage and project cards (needs internet;
+  // the homepage falls back to drawings if this fails).
+  \Drupal\sthira\Photos::seed();
+
+  // Build the search index now (with vectors if the local model is running).
+  \Drupal::service('sthira.search_index')->rebuild();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function sthira_uninstall($is_syncing) {
+  $config = \Drupal::configFactory();
+  if ($config->get('system.theme')->get('default') === 'sthira_theme') {
+    $config->getEditable('system.theme')->set('default', 'olivero')->save();
+  }
+  $config->getEditable('system.site')->set('page.front', '/node')->save();
+  \Drupal::state()->deleteMultiple(['sthira.people', 'sthira.demo_uids', 'sthira.search.dirty', 'sthira.search.built', 'sthira.search.embedder', 'sthira.hero_photo', 'sthira.photos_tried']);
+  // Tables from the first prototype version, which stored data outside nodes.
+  $schema = \Drupal::database()->schema();
+  foreach (['sthira_project', 'sthira_budget', 'sthira_member', 'sthira_item', 'sthira_vendor', 'sthira_quote', 'sthira_request', 'sthira_stock'] as $table) {
+    if ($schema->tableExists($table)) {
+      $schema->dropTable($table);
+    }
+  }
+  // Drupal keeps roles when a module that provides their permissions is
+  // uninstalled; remove ours so the module can be cleanly reinstalled.
+  $roles = \Drupal::entityTypeManager()->getStorage('user_role');
+  foreach (['director', 'project_manager', 'site_engineer', 'procurement_officer', 'vendor', 'purchase_officer', 'store_keeper', 'accounts'] as $rid) {
+    if ($role = $roles->load($rid)) {
+      $role->delete();
+    }
+  }
+}

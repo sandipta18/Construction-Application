@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_grn_date
+  - node.type.material_request
+  enforced:
+    module:
+    - sthira
+id: node.material_request.field_grn_date
+field_name: field_grn_date
+entity_type: node
+bundle: material_request
+label: Delivery date
+description: ''
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings: {}
+field_type: timestamp

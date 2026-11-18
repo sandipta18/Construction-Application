@@ -1,0 +1,14 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+    - sthira
+name: Material request
+type: material_request
+description: A request for material, carried through approval, purchase order, delivery,
+  invoice check and payment.
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

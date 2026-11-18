@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_pan
+  - node.type.vendor
+  enforced:
+    module:
+    - sthira
+id: node.vendor.field_pan
+field_name: field_pan
+entity_type: node
+bundle: vendor
+label: PAN
+description: ''
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings: {}
+field_type: string

@@ -1,0 +1,30 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_documents
+  - node.type.vendor
+  module:
+  - file
+  enforced:
+    module:
+    - sthira
+id: node.vendor.field_documents
+field_name: field_documents
+entity_type: node
+bundle: vendor
+label: Documents
+description: GST certificate, PAN card, cancelled cheque, MSME certificate (PDF or
+  image).
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings:
+  handler: default:file
+  handler_settings: {}
+  file_directory: vendor-docs
+  file_extensions: pdf jpg jpeg png
+  max_filesize: 5 MB
+  description_field: false
+field_type: file

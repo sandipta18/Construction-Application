@@ -1,0 +1,66 @@
+<div class="page page--narrow">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Supplier portal</p>
+      <h1>{{ v.name }}</h1>
+      <p class="sub"><span class="pill pill--{{ v.status_tone }}">{{ v.status_label }}</span></p>
+    </div>
+    {% if urls.edit %}<a class="btn" href="{{ urls.edit }}">Edit company details</a>{% endif %}
+  </header>
+
+  {% if v.status == 'pending' %}
+    <div class="notice notice--warn"><strong>Your registration is being verified.</strong> Our procurement team is checking your documents. We'll email {{ v.email }} once it's approved, usually within 1–2 working days. After that you can add your rates and receive purchase orders.</div>
+  {% elseif v.status == 'rejected' %}
+    <div class="notice notice--bad"><strong>Your registration needs changes.</strong> {{ v.review_note ?: 'Please check your details.' }} Update your company details and save to resubmit.</div>
+  {% endif %}
+
+  {% if approved %}
+    <div class="stats">
+      <div class="stat"><span class="stat-label">On-time delivery</span><span class="stat-value">{{ v.on_time }}%</span><span class="stat-sub">across past orders</span></div>
+      <div class="stat"><span class="stat-label">Rating</span><span class="stat-value">{{ v.rating }} ★</span><span class="stat-sub">from site teams</span></div>
+      <div class="stat"><span class="stat-label">Purchase orders</span><span class="stat-value">{{ orders|length }}</span><span class="stat-sub">placed with you</span></div>
+    </div>
+
+    <section class="section">
+      <div class="section-head"><h2>My rates</h2>{% if urls.add_rate %}<a class="btn btn-primary" href="{{ urls.add_rate }}">+ Add rate</a>{% endif %}</div>
+      {% if rates %}
+        <table class="table">
+          <thead><tr><th>Material</th><th class="num">Rate</th><th>Lead time</th><th>Updated</th><th></th></tr></thead>
+          <tbody>
+            {% for r in rates %}
+              <tr><td>{{ r.item }}</td><td class="num">{{ r.rate }}</td><td>{{ r.lead }}</td><td class="muted">{{ r.updated }}</td><td class="nowrap"><a class="link" href="{{ r.edit }}">Edit</a> · <a class="link" href="{{ r.delete }}">Remove</a></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="empty">Add your rates so procurement can consider you for orders.</p>
+      {% endif %}
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Purchase orders</h2></div>
+      {% if orders %}
+        <ul class="list">
+          {% for o in orders %}
+            <li><div class="list-row"><span class="list-main"><strong>{{ o.title }}</strong><small>{{ o.po }} · {{ o.date }}</small></span><span class="list-side"><span class="amount">{{ o.amount }}</span><span class="pill pill--{{ o.tone }}">{{ o.stage }}</span></span></div></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">No purchase orders yet.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <section class="section">
+    <div class="section-head"><h2>Company details</h2></div>
+    <dl class="facts">
+      <div><dt>Contact</dt><dd>{{ v.contact }}</dd></div>
+      <div><dt>Phone</dt><dd>{{ v.phone }}</dd></div>
+      <div><dt>City</dt><dd>{{ v.city }}</dd></div>
+      <div><dt>GSTIN</dt><dd>{{ v.gstin }}</dd></div>
+      <div><dt>PAN</dt><dd>{{ v.pan ?: '—' }}</dd></div>
+      <div><dt>Supplies</dt><dd>{{ v.supplies }}</dd></div>
+      <div><dt>Documents</dt><dd>{% for d in v.documents %}<a class="link" href="{{ d.url }}" target="_blank">{{ d.name }}</a><br>{% else %}<span class="muted">None</span>{% endfor %}</dd></div>
+    </dl>
+  </section>
+</div>

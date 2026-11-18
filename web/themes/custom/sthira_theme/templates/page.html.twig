@@ -1,0 +1,121 @@
+{#
+/**
+ * @file
+ * App shell for Sthira. Layouts: app (signed-in), auth (sign-in), basic.
+ */
+#}
+{% set s = sthira %}
+{% if s.layout == 'app' %}
+<div class="app">
+  <aside class="sidebar">
+    <a class="brand" href="{{ path('sthira.dashboard') }}">
+      <span class="brand-mark"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11.5"/><circle cx="16" cy="16" r="5.5" opacity=".65"/><path d="M16 16l8.2-8.2"/><circle cx="16" cy="16" r="1.9" fill="currentColor" stroke="none"/><circle cx="21.6" cy="20.8" r="1.7" fill="currentColor" stroke="none"/></svg></span>
+      <strong>Infra Radar</strong>
+    </a>
+    <nav class="nav" aria-label="Main">
+      {% for item in s.nav %}
+        {% if item.section %}
+          <div class="nav-section">{{ item.section }}</div>
+        {% else %}
+          <a href="{{ item.url }}" class="nav-link{{ item.active ? ' is-active' }}">
+            {{ item.icon }}<span>{{ item.label }}</span>
+            {% if item.badge %}<em class="nav-badge">{{ item.badge }}</em>{% endif %}
+          </a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      {% if s.switcher %}
+        <details class="switcher">
+          <summary><span class="muted">Viewing as</span> <strong>{{ s.user.title }}</strong> <span class="caret">▾</span></summary>
+          <div class="switcher-menu">
+            {% for u in s.switcher %}
+              <a href="{{ u.url }}" class="{{ u.current ? 'is-current' }}"><span class="avatar sm">{{ u.initials }}</span><span><strong>{{ u.role }}</strong><small>{{ u.name }}</small></span></a>
+            {% endfor %}
+          </div>
+        </details>
+      {% endif %}
+      <div class="me">
+        <span class="avatar sm">{{ s.user.initials }}</span>
+        <span>{{ s.user.name }}</span>
+        <a class="signout" href="{{ s.logout }}" title="Sign out">{{ s.icons.logout }}</a>
+      </div>
+    </header>
+    {% if page.messages %}<div class="messages-wrap">{{ page.messages }}</div>{% endif %}
+    <main class="content" id="main-content">
+      {% if s.app_route %}
+        {{ page.content }}
+      {% else %}
+        <div class="page page--drupal">
+          {% if page.tabs %}<div class="drupal-tabs">{{ page.tabs }}</div>{% endif %}
+          {{ page.title }}
+          <div class="drupal-content">{{ page.content }}</div>
+        </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+
+{% elseif s.layout == 'landing' %}
+<div class="landing-root">
+  {% if page.messages %}<div class="landing-messages">{{ page.messages }}</div>{% endif %}
+  {{ page.content }}
+</div>
+
+{% elseif s.layout == 'auth' %}
+<div class="auth">
+  <section class="auth-hero">
+    <div class="auth-brand">
+      <span class="brand-mark"><svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11.5"/><circle cx="16" cy="16" r="5.5" opacity=".65"/><path d="M16 16l8.2-8.2"/><circle cx="16" cy="16" r="1.9" fill="currentColor" stroke="none"/><circle cx="21.6" cy="20.8" r="1.7" fill="currentColor" stroke="none"/></svg></span>
+      <span class="brand-text"><strong>Infra Radar</strong><small>Construction procurement</small></span>
+    </div>
+    <div class="auth-copy">
+      <h1>Procurement that<br><span>thinks ahead.</span></h1>
+      <p>From site request to supplier payment, with the right approvals at every step.</p>
+    </div>
+    <div class="auth-foot">Prototype · demo data only</div>
+  </section>
+  <section class="auth-panel">
+    <div class="auth-card{{ s.auth_mode == 'register' ? ' auth-card--wide' }}">
+      {% if s.auth_mode == 'register' %}
+        <h2>Register as a supplier</h2>
+        <p class="muted">Tell us about your company. Our procurement team verifies your details before you can quote.</p>
+      {% else %}
+        <h2>Sign in</h2>
+        <p class="muted">Pick a demo account to see what each role sees.</p>
+      {% endif %}
+      {{ page.messages }}
+      {{ page.content }}
+      {% if s.auth_mode != 'register' %}<p class="auth-register">New supplier? <a href="{{ s.register_url }}">Register as a supplier →</a></p>{% endif %}
+      {% if s.demo_accounts and s.auth_mode != 'register' %}
+        <div class="demo-accounts">
+          <div class="demo-accounts-head"><span>Demo accounts</span><span class="muted">password: <code>{{ s.demo_password }}</code></span></div>
+          {% for a in s.demo_accounts %}
+            <button type="button" class="demo-account" data-username="{{ a.username }}" data-password="{{ s.demo_password }}">
+              <span class="avatar sm">{{ a.initials }}</span><span><strong>{{ a.name }}</strong><small>{{ a.title }}</small></span><code>{{ a.username }}</code>
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+{% else %}
+<div class="basic">
+  <header class="basic-head">
+    <a class="brand brand--dark" href="{{ path('<front>') }}">
+      <span class="brand-mark"><svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11.5"/><circle cx="16" cy="16" r="5.5" opacity=".65"/><path d="M16 16l8.2-8.2"/><circle cx="16" cy="16" r="1.9" fill="currentColor" stroke="none"/><circle cx="21.6" cy="20.8" r="1.7" fill="currentColor" stroke="none"/></svg></span>
+      <span class="brand-text"><strong>Infra Radar</strong></span>
+    </a>
+  </header>
+  <main class="basic-main">
+    {{ page.messages }}
+    {{ page.title }}
+    {{ page.content }}
+  </main>
+</div>
+{% endif %}

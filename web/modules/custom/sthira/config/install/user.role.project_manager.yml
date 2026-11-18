@@ -1,0 +1,16 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - sthira
+id: project_manager
+label: 'Project Manager'
+weight: 4
+is_admin: false
+permissions:
+  - 'access sthira app'
+  - 'raise requests'
+  - 'approve requests'
+  - 'receive goods'
+  - 'view finance'
+  - 'view vendors'

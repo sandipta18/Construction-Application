@@ -1,0 +1,12 @@
+<ul class="insights">
+  {% for i in insights %}
+    <li class="insight insight--{{ i.severity }}">
+      <span class="dot dot--{{ i.severity }}"></span>
+      <div class="insight-body">
+        <strong>{{ i.title }}</strong>
+        <p>{{ i.text }}</p>
+        {% if i.action %}<a class="link" href="{{ i.action.url }}">{{ i.action.label }} →</a>{% endif %}
+      </div>
+    </li>
+  {% endfor %}
+</ul>

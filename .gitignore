@@ -1,0 +1,43 @@
+# Composer-managed dependencies and Drupal core.
+/vendor/
+/web/core/
+/web/modules/contrib/
+/web/themes/contrib/
+/web/profiles/contrib/
+/web/libraries/
+
+# Drupal site-local files and private configuration.
+/web/sites/*/files/
+/web/sites/*/private/
+/web/sites/*/settings*.php
+/web/sites/*/services*.yml
+/web/sites/simpletest/
+
+# Local environment and generated files.
+/.ddev/
+/_to_delete/
+/.sthira-update.tgz
+/.shtira-update.tgz
+.env
+.env.*
+!.env.example
+.phpunit.result.cache
+.phpunit.cache/
+/drush-backups/
+
+# JavaScript dependencies and build output.
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.cache/
+
+# IDE and operating system files.
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

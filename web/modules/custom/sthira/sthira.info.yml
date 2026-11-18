@@ -1,0 +1,13 @@
+name: 'Infra Radar'
+type: module
+description: 'Construction procurement prototype: roles and approval limits, purchase workflow, vendors, stock and rule-based AI assist.'
+package: 'Infra Radar'
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:user
+  - drupal:block
+  - drupal:node
+  - drupal:datetime
+  - drupal:options
+  - drupal:file
+  - drupal:image

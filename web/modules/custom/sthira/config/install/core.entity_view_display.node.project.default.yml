@@ -1,0 +1,177 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - node.type.project
+  - field.field.node.project.field_code
+  - field.field.node.project.field_location
+  - field.field.node.project.field_client
+  - field.field.node.project.field_phase
+  - field.field.node.project.field_progress
+  - field.field.node.project.field_contract_value
+  - field.field.node.project.field_start_date
+  - field.field.node.project.field_end_date
+  - field.field.node.project.field_photo
+  - field.field.node.project.field_description
+  - field.field.node.project.field_team
+  - field.field.node.project.field_budget_steel
+  - field.field.node.project.field_budget_cement
+  - field.field.node.project.field_budget_aggregates
+  - field.field.node.project.field_budget_bricks
+  - field.field.node.project.field_budget_electrical
+  - field.field.node.project.field_budget_plumbing
+  - field.field.node.project.field_budget_finishing
+  module:
+  - datetime
+  - image
+  - user
+  enforced:
+    module:
+    - sthira
+id: node.project.default
+targetEntityType: node
+bundle: project
+mode: default
+content:
+  field_code:
+    type: string
+    label: inline
+    settings: &id001
+      link_to_entity: false
+    third_party_settings: {}
+    weight: 1
+    region: content
+  field_location:
+    type: string
+    label: inline
+    settings: *id001
+    third_party_settings: {}
+    weight: 2
+    region: content
+  field_client:
+    type: string
+    label: inline
+    settings: *id001
+    third_party_settings: {}
+    weight: 3
+    region: content
+  field_phase:
+    type: string
+    label: inline
+    settings: *id001
+    third_party_settings: {}
+    weight: 4
+    region: content
+  field_progress:
+    type: number_integer
+    label: inline
+    settings: &id002
+      thousand_separator: ','
+      prefix_suffix: true
+    third_party_settings: {}
+    weight: 5
+    region: content
+  field_contract_value:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 6
+    region: content
+  field_start_date:
+    type: datetime_custom
+    label: inline
+    settings: &id003
+      timezone_override: ''
+      date_format: d M Y
+    third_party_settings: {}
+    weight: 7
+    region: content
+  field_end_date:
+    type: datetime_custom
+    label: inline
+    settings: *id003
+    third_party_settings: {}
+    weight: 8
+    region: content
+  field_photo:
+    type: image
+    label: inline
+    settings:
+      image_link: ''
+      image_style: ''
+      image_loading:
+        attribute: lazy
+    third_party_settings: {}
+    weight: 9
+    region: content
+  field_description:
+    type: basic_string
+    label: inline
+    settings: {}
+    third_party_settings: {}
+    weight: 10
+    region: content
+  field_team:
+    type: entity_reference_label
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {}
+    weight: 11
+    region: content
+  field_budget_steel:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 12
+    region: content
+  field_budget_cement:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 13
+    region: content
+  field_budget_aggregates:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 14
+    region: content
+  field_budget_bricks:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 15
+    region: content
+  field_budget_electrical:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 16
+    region: content
+  field_budget_plumbing:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 17
+    region: content
+  field_budget_finishing:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 18
+    region: content
+  links:
+    settings: {}
+    third_party_settings: {}
+    weight: 100
+    region: content
+hidden: {}

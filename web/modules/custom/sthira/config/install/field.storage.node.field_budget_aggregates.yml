@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  module:
+  - node
+  enforced:
+    module:
+    - sthira
+id: node.field_budget_aggregates
+field_name: field_budget_aggregates
+entity_type: node
+type: integer
+settings:
+  unsigned: false
+  size: big
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {}
+persist_with_no_fields: false
+custom_storage: false

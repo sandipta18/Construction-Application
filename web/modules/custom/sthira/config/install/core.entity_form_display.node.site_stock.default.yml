@@ -1,0 +1,58 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - node.type.site_stock
+  - field.field.node.site_stock.field_project
+  - field.field.node.site_stock.field_material
+  - field.field.node.site_stock.field_stock_qty
+  - field.field.node.site_stock.field_daily_use
+  module: []
+  enforced:
+    module:
+    - sthira
+id: node.site_stock.default
+targetEntityType: node
+bundle: site_stock
+mode: default
+content:
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {}
+  field_project:
+    type: options_select
+    weight: 1
+    region: content
+    settings: &id001 {}
+    third_party_settings: {}
+  field_material:
+    type: options_select
+    weight: 2
+    region: content
+    settings: *id001
+    third_party_settings: {}
+  field_stock_qty:
+    type: number
+    weight: 3
+    region: content
+    settings: &id002
+      placeholder: ''
+    third_party_settings: {}
+  field_daily_use:
+    type: number
+    weight: 4
+    region: content
+    settings: *id002
+    third_party_settings: {}
+hidden:
+  created: true
+  promote: true
+  sticky: true
+  uid: true
+  path: true
+  status: true

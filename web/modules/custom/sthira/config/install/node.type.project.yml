@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+    - sthira
+name: Project
+type: project
+description: A construction project or site, with its team and material budget.
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

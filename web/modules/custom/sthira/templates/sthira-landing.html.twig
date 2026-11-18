@@ -1,0 +1,192 @@
+{#
+/**
+ * @file
+ * Public supplier homepage.
+ */
+#}
+<div class="lp">
+  <header class="lp-nav-wrap">
+    <nav class="lp-nav" aria-label="Main">
+      <a class="lp-logo" href="#top"><span class="lp-logo-mark"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11.5"/><circle cx="16" cy="16" r="5.5" opacity=".65"/><path d="M16 16l8.2-8.2"/><circle cx="16" cy="16" r="1.9" fill="currentColor" stroke="none"/><circle cx="21.6" cy="20.8" r="1.7" fill="currentColor" stroke="none"/></svg></span>Infra Radar</a>
+      <ul class="lp-menu">
+        <li><a href="#buying">What we're buying</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#categories">Categories</a></li>
+        <li><a href="#faq-search">Supplier help</a></li>
+      </ul>
+      <div class="lp-nav-actions">
+        <a class="lp-icon" href="#search" title="Search">{{ icons.sparkle }}</a>
+        {% if urls.app %}
+          <a class="lp-btn lp-btn--dark" href="{{ urls.app }}">Open app</a>
+        {% else %}
+          <a class="lp-link" href="{{ urls.login }}">Sign in</a>
+          <a class="lp-btn lp-btn--dark" href="{{ urls.register }}">Become a supplier</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  <section class="lp-hero" id="top" data-lp-hero>
+    <div class="lp-hero-bg" aria-hidden="true">
+      {% for s in slides %}
+        <img class="lp-hero-photo{{ loop.first ? ' is-active' }}" data-lp-slide src="{{ s.photo }}" alt="" {{ loop.first ? 'fetchpriority="high"' : 'loading="lazy"' }}>
+      {% endfor %}
+    </div>
+    <div class="lp-hero-inner">
+      <div class="lp-hero-copy">
+        <p class="lp-kicker">Supplier network · {{ projects|length }} live sites</p>
+        <h1>Supply the projects that are shaping our cities.</h1>
+        <p class="lp-lead">Register once, get verified, and quote on the steel, cement and finishing materials our sites need this month. Fair comparisons, clear orders and payment within 30 days.</p>
+        <div class="lp-hero-ctas">
+          <a class="lp-btn lp-btn--dark" href="{{ urls.register }}">Register as a supplier <span aria-hidden="true">↗</span></a>
+          <a class="lp-btn lp-btn--outline" href="#buying">See what we're buying</a>
+        </div>
+      </div>
+      <div class="lp-hero-side">
+        <div class="lp-site" aria-live="polite">
+          {% for s in slides %}
+            <div class="lp-site-item{{ loop.first ? ' is-active' }}" data-lp-need-item>
+              <div class="lp-site-cap">
+                <span class="lp-slide-k">Now building</span>
+                <strong>{{ s.name }}</strong>
+                <span class="lp-slide-meta">{{ s.city }} · {{ s.phase }}</span>
+                <span class="lp-slide-bar" aria-label="{{ s.progress }}% built"><i style="width: {{ s.progress }}%"></i></span>
+                <small>{{ s.progress }}% built</small>
+              </div>
+              <div class="lp-site-need">
+                <span class="lp-chip{{ s.open ? ' lp-chip--live' }}">{{ s.open ? 'Needed now' : 'Coming up' }}</span>
+                <p>{{ s.sentence }}</p>
+                <a class="lp-arrow" href="{{ urls.register }}">{{ s.open ? 'Quote for this' : 'Get notified' }} <span aria-hidden="true">→</span></a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="lp-show-dots" role="tablist" aria-label="Projects">
+          {% for s in slides %}<button type="button" class="{{ loop.first ? 'is-active' }}" data-lp-dot="{{ loop.index0 }}" aria-label="{{ s.name }}"></button>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-search-card" id="search" data-lp-search>
+    <h2>Looking to supply? <br>Our <span class="lp-grad">AI search</span> can help.</h2>
+    <form class="lp-search" data-lp-form role="search">
+      <span class="lp-orb" aria-hidden="true"></span>
+      <input type="search" data-lp-input placeholder="Ask anything: “projects in Maharashtra”, “cemnt in pune”, “who do I contact about an order?”" aria-label="Search">
+      <button type="submit" class="lp-search-btn" aria-label="Search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+    </form>
+    <div class="lp-suggest">
+      {% for s in suggestions %}<button type="button" data-lp-try="{{ s }}">{{ s }}</button>{% endfor %}
+    </div>
+    <div class="lp-thinking" data-lp-thinking hidden><span class="dots"><i></i><i></i><i></i></span> <span data-lp-step>Searching…</span></div>
+    <div class="lp-results" data-lp-results hidden></div>
+    <p class="lp-disclaimer" data-lp-disclaimer>Answers come from our own search index of live requirements, projects, materials and supplier help, ranked on our server. No external AI service.</p>
+  </section>
+
+  <section class="lp-band">
+    <div class="lp-band-inner">
+      <h2>Big projects.<br><span>Fair buying.</span></h2>
+      <div class="lp-band-copy">
+        <p>Every order is compared on price, on-time delivery and quality, and checked against when the site actually needs it. The best overall value wins, not just the lowest quote.</p>
+        <p>Every invoice is matched against the purchase order and what arrived at site, so payments are quick and disputes are rare.</p>
+        <a class="lp-btn lp-btn--outline" href="#how">How it works</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section" id="buying">
+    <div class="lp-section-head">
+      <div><p class="lp-eyebrow">Open requirements</p><h2>What we're buying now</h2></div>
+      <a class="lp-btn lp-btn--dark" href="{{ urls.register }}">Register to quote</a>
+    </div>
+    <div class="lp-req-grid">
+      {% for r in requirements %}
+        <article class="lp-req">
+          <div class="lp-req-top"><span class="lp-tag">{{ r.category }}</span><span class="lp-chip{{ r.live ? ' lp-chip--live' }}">{{ r.status }}</span></div>
+          <h3>{{ r.qty }}<span>{{ r.material }}</span></h3>
+          <dl>
+            <div><dt>Site</dt><dd>{{ r.project }}, {{ r.city }}</dd></div>
+            <div><dt>Needed by</dt><dd>{{ r.needed }}{% if r.urgent %} · urgent{% endif %}</dd></div>
+          </dl>
+          <a class="lp-arrow" href="{{ urls.register }}">Quote for this <span aria-hidden="true">→</span></a>
+        </article>
+      {% else %}
+        <p class="lp-muted">No open requirements right now. Register and we'll notify you when we need your materials.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="lp-stats">
+    {% for st in stats %}
+      <div class="lp-stat"><strong>{{ st.value }}</strong><span>{{ st.label }}</span></div>
+    {% endfor %}
+  </section>
+
+  <section class="lp-section" id="projects">
+    <div class="lp-section-head"><div><p class="lp-eyebrow">Where your materials go</p><h2>Our active projects</h2></div></div>
+    <div class="lp-proj-grid">
+      {% for p in projects %}
+        <article class="lp-proj" id="project-{{ p.code|lower }}">
+          <div class="lp-proj-img{{ p.photo ? '' : ' lp-proj-img--art lp-proj-img--' ~ loop.index }}"{% if p.photo %} style="background-image: url('{{ p.photo }}')"{% endif %}>
+            {% if not p.photo %}
+              <svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+                <g fill="rgba(255,255,255,.14)"><rect x="40" y="70" width="70" height="150"/><rect x="125" y="30" width="90" height="190"/><rect x="230" y="95" width="60" height="125"/><rect x="305" y="55" width="70" height="165"/></g>
+                <g fill="rgba(255,255,255,.35)">{% for row in 0..5 %}{% for col in 0..2 %}<rect x="{{ 138 + col * 26 }}" y="{{ 48 + row * 26 }}" width="12" height="12"/>{% endfor %}{% endfor %}</g>
+                <g stroke="rgba(255,255,255,.55)" stroke-width="3" fill="none"><path d="M330 220V20h-90"/><path d="M330 40l-70 0"/><path d="M262 20v40"/></g>
+              </svg>
+            {% endif %}
+            <span class="lp-proj-progress">{{ p.progress }}% built</span>
+          </div>
+          <div class="lp-proj-body">
+            <p class="lp-tag">{{ p.city }}</p>
+            <h3>{{ p.name }}</h3>
+            <p class="lp-muted">{{ p.phase }} · completion {{ p.until }}</p>
+            <div class="lp-bar"><span style="width: {{ p.progress }}%"></span></div>
+            <p class="lp-small">{{ p.buying }} open requirement{{ p.buying == 1 ? '' : 's' }} for this site</p>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="lp-section lp-how" id="how">
+    <div class="lp-section-head"><div><p class="lp-eyebrow">For suppliers</p><h2>How it works</h2></div></div>
+    <ol class="lp-steps">
+      <li><span>01</span><h3>Register</h3><p>Company details, GSTIN, PAN, bank details and documents.</p></li>
+      <li><span>02</span><h3>Get verified</h3><p>Procurement checks your documents, usually in 1 to 2 working days.</p></li>
+      <li><span>03</span><h3>Add your rates</h3><p>Keep prices and lead times up to date in your vendor portal.</p></li>
+      <li><span>04</span><h3>Receive POs</h3><p>Win orders on price, delivery record and quality together.</p></li>
+      <li><span>05</span><h3>Get paid</h3><p>Within 30 days of an invoice that matches the delivery.</p></li>
+    </ol>
+  </section>
+
+  <section class="lp-section" id="categories">
+    <div class="lp-section-head"><div><p class="lp-eyebrow">Categories</p><h2>What we buy</h2></div></div>
+    <div class="lp-cat-grid">
+      {% for c in categories %}
+        <div class="lp-cat">
+          <h3>{{ c.label }}</h3>
+          <p class="lp-muted">{{ c.items|join(', ') ?: 'On request' }}</p>
+          {% if c.open %}<span class="lp-chip lp-chip--live">{{ c.open }} open</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="lp-cta">
+    <h2>Ready to supply?</h2>
+    <p>Join our verified supplier network and start quoting on live requirements.</p>
+    <div class="lp-hero-ctas"><a class="lp-btn lp-btn--light" href="{{ urls.register }}">Register as a supplier</a>{% if not urls.app %}<a class="lp-btn lp-btn--ghost" href="{{ urls.login }}">Sign in</a>{% endif %}</div>
+  </section>
+
+  <footer class="lp-footer">
+    <div class="lp-footer-cols">
+      <div><a class="lp-logo lp-logo--light" href="#top"><span class="lp-logo-mark"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11.5"/><circle cx="16" cy="16" r="5.5" opacity=".65"/><path d="M16 16l8.2-8.2"/><circle cx="16" cy="16" r="1.9" fill="currentColor" stroke="none"/><circle cx="21.6" cy="20.8" r="1.7" fill="currentColor" stroke="none"/></svg></span>Infra Radar</a><p>Construction procurement prototype. Demo data only.</p></div>
+      <div><h4>Suppliers</h4><a href="{{ urls.register }}">Register</a><a href="{{ urls.login }}">Sign in</a><a href="#faq-search">Supplier help</a></div>
+      <div><h4>Explore</h4><a href="#buying">Open requirements</a><a href="#projects">Projects</a><a href="#categories">Categories</a></div>
+      <div id="faq-search"><h4>Help</h4><a href="#search" data-lp-try-link="how do I become a supplier">Becoming a supplier</a><a href="#search" data-lp-try-link="when do you pay">Payment terms</a><a href="#search" data-lp-try-link="how do you choose a vendor">How vendors are chosen</a></div>
+    </div>
+    <p class="lp-copy">© {{ 'now'|date('Y') }} Infra Radar (prototype). All companies and figures shown are fictional. Construction photos from Unsplash.</p>
+  </footer>
+</div>

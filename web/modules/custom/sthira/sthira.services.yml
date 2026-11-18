@@ -1,0 +1,21 @@
+services:
+  sthira.repository:
+    class: Drupal\sthira\Repository
+    arguments: ['@database', '@state', '@entity_type.manager']
+  sthira.workflow:
+    class: Drupal\sthira\Workflow
+    arguments: ['@config.factory', '@sthira.repository']
+  sthira.assistant:
+    class: Drupal\sthira\Assistant
+    arguments: ['@sthira.repository', '@sthira.workflow']
+  sthira.embedder:
+    class: Drupal\sthira\Search\Embedder
+    arguments: ['@config.factory', '@http_client', '@state']
+  sthira.search_index:
+    class: Drupal\sthira\Search\SearchIndex
+    arguments: ['@database', '@sthira.repository', '@sthira.assistant', '@sthira.embedder', '@state']
+    tags:
+      - { name: needs_destruction }
+  sthira.search:
+    class: Drupal\sthira\Search\SearchEngine
+    arguments: ['@sthira.search_index', '@sthira.embedder']

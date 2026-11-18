@@ -1,0 +1,13 @@
+name: 'Infra Radar'
+type: theme
+description: 'App-shell theme for the Infra Radar construction procurement prototype.'
+package: 'Infra Radar'
+core_version_requirement: ^10 || ^11
+base theme: false
+libraries:
+  - sthira_theme/global
+regions:
+  messages: Messages
+  title: 'Page title'
+  tabs: Tabs
+  content: Content

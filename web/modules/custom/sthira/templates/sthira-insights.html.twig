@@ -1,0 +1,13 @@
+<div class="page page--narrow">
+  <header class="page-head">
+    <div>
+      <h1><span class="ai-tag ai-tag--lg">AI</span> Tips from the assistant</h1>
+      <p class="sub">The assistant watches stock, prices, budgets, waiting requests, bills and price agreements for you.</p>
+    </div>
+  </header>
+  {% if insights %}
+    {% include '@sthira/sthira-insight-list.html.twig' with { insights: insights } %}
+  {% else %}
+    <p class="empty">Nothing to flag right now.</p>
+  {% endif %}
+</div>

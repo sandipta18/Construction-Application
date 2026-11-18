@@ -1,0 +1,56 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - node.type.vendor_rate
+  - field.field.node.vendor_rate.field_vendor
+  - field.field.node.vendor_rate.field_material
+  - field.field.node.vendor_rate.field_rate
+  - field.field.node.vendor_rate.field_lead_days
+  module:
+  - user
+  enforced:
+    module:
+    - sthira
+id: node.vendor_rate.default
+targetEntityType: node
+bundle: vendor_rate
+mode: default
+content:
+  field_vendor:
+    type: entity_reference_label
+    label: inline
+    settings: &id001
+      link: true
+    third_party_settings: {}
+    weight: 1
+    region: content
+  field_material:
+    type: entity_reference_label
+    label: inline
+    settings: *id001
+    third_party_settings: {}
+    weight: 2
+    region: content
+  field_rate:
+    type: number_integer
+    label: inline
+    settings: &id002
+      thousand_separator: ','
+      prefix_suffix: true
+    third_party_settings: {}
+    weight: 3
+    region: content
+  field_lead_days:
+    type: number_integer
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 4
+    region: content
+  links:
+    settings: {}
+    third_party_settings: {}
+    weight: 100
+    region: content
+hidden: {}

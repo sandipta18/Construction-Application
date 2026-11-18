@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_description
+  - node.type.material
+  enforced:
+    module:
+    - sthira
+id: node.material.field_description
+field_name: field_description
+entity_type: node
+bundle: material
+label: Description (public)
+description: Plain-language description used by the homepage search.
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings: {}
+field_type: string_long

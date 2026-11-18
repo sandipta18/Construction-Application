@@ -1,0 +1,12 @@
+<section class="intake" data-intake-box>
+  <label class="intake-label" for="intake-text"><span class="ai-tag">AI</span> Type what you need in your own words, or fill the form below</label>
+  <div class="intake-input">
+    <input type="text" id="intake-text" data-intake-text placeholder="e.g. Need 400 bags of cement at Skyline by Friday" autocomplete="off">
+    <button type="button" class="btn btn-primary" data-intake-go>Fill form</button>
+  </div>
+  <div class="intake-samples">
+    {% for s in samples %}<button type="button" class="chip" data-intake-sample="{{ s }}">{{ s }}</button>{% endfor %}
+  </div>
+  <div class="intake-thinking" data-intake-thinking hidden><span class="dots"><i></i><i></i><i></i></span><span data-intake-step>Reading…</span></div>
+  <div class="intake-result" data-intake-result hidden></div>
+</section>

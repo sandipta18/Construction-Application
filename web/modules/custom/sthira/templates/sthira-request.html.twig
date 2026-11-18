@@ -1,0 +1,110 @@
+<div class="page page--narrow">
+  <div class="crumbs"><a class="back" href="{{ urls.requests }}">← Requests</a>{% if urls.edit %}<a class="drupal-link" href="{{ urls.edit }}">Edit details</a>{% endif %}</div>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ r.project }} <span class="ref">· {{ r.ref }}</span></p>
+      <h1>{{ r.title }}</h1>
+      <p class="sub"><span class="pill pill--{{ r.tone }}">{{ r.stage }}</span>{% if r.priority == 'urgent' %} <span class="tag tag--bad">Urgent</span>{% endif %}</p>
+    </div>
+    {% if r.amount %}<div class="head-amount"><small>{{ r.amount_label }}</small><strong>{{ r.amount }}</strong></div>{% endif %}
+  </header>
+
+  <ol class="steps">
+    {% for s in steps %}
+      <li class="step step--{{ s.state }}" title="{{ s.meta }}"><span class="step-dot"></span><span class="step-label">{{ s.label }}</span></li>
+    {% endfor %}
+  </ol>
+
+  <div class="detail">
+    <div class="detail-main">
+
+      {% if reco %}
+        <section class="section section--ai">
+          <div class="section-head"><h2><span class="ai-tag">AI</span> Best supplier for this order</h2></div>
+          <div class="reco">
+            <div class="reco-name"><strong>{{ reco.0.name }}</strong><span>{{ reco.0.rate }} · delivers in {{ reco.0.lead }} · on time {{ reco.0.on_time }}% of the time</span></div>
+            <p>{{ reco.0.reason }}</p>
+          </div>
+          {% if reco|length > 1 %}
+            <details class="more">
+              <summary>Compare all {{ reco|length }} suppliers</summary>
+              <table class="table">
+                <thead><tr><th>Supplier</th><th class="num">Price</th><th>Delivers in</th><th>On time</th><th>Rating</th><th class="num">Score</th></tr></thead>
+                <tbody>
+                  {% for v in reco %}
+                    <tr><td>{{ v.name }}{% for t in v.tags %} <span class="tag{{ t == 'May miss date' ? ' tag--bad' }}">{{ t }}</span>{% endfor %}</td><td class="num">{{ v.rate }}</td><td>{{ v.lead }}</td><td>{{ v.on_time }}%</td><td>{{ v.rating }}</td><td class="num"><b>{{ v.score }}</b></td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+              <p class="muted small">The score mixes price, how often they deliver on time and their rating.</p>
+            </details>
+          {% endif %}
+        </section>
+      {% endif %}
+
+      {% if match and finance %}
+        <section class="section">
+          <div class="section-head"><h2>Bill check</h2><span class="pill pill--{{ match.status == 'matched' ? 'ok' : 'bad' }}">{{ match.status == 'matched' ? 'Order, delivery and bill match' : 'Does not match' }}</span></div>
+          <table class="table match">
+            <thead><tr><th></th><th>Ordered</th><th>Arrived</th><th>Billed</th></tr></thead>
+            <tbody>
+              {% for m in match.rows %}
+                <tr class="{{ m.ok ? '' : 'is-bad' }}"><th>{{ m.label }}</th><td>{{ m.po }}</td><td>{{ m.grn }}</td><td>{{ m.inv }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      {% endif %}
+
+      <section class="section">
+        <div class="section-head"><h2>Details</h2></div>
+        {% if r.raw_text %}<p class="ai-said"><span class="ai-tag">AI</span> Typed as: “{{ r.raw_text }}”</p>{% endif %}
+        <dl class="facts">
+          <div><dt>Material</dt><dd>{{ r.item }}</dd></div>
+          <div><dt>Quantity</dt><dd>{{ r.qty }}</dd></div>
+          <div><dt>Needed by</dt><dd>{{ r.needed_by }}</dd></div>
+          <div><dt>Estimated cost</dt><dd>{{ r.est_amount ?: '🔒 Hidden for your role' }}</dd></div>
+          <div><dt>Asked by</dt><dd>{{ r.by.name }}</dd></div>
+          <div><dt>Approved by</dt><dd>{{ r.needs_director ? 'Project manager, then Director' : 'Project manager' }}</dd></div>
+          {% if r.po %}
+            <div><dt>Supplier</dt><dd>{{ r.po.vendor }}</dd></div>
+            <div><dt>Order</dt><dd>{{ r.po.number }}{% if r.po.amount %} · {{ r.po.amount }}{% endif %}</dd></div>
+            {% if r.po.received %}<div><dt>Arrived</dt><dd>{{ r.po.received }}</dd></div>{% endif %}
+          {% endif %}
+        </dl>
+        {% if r.note %}<p class="note">{{ r.note }}</p>{% endif %}
+        {% if budget %}
+          <div class="budget-line">
+            <div class="bar"><span class="bar-fill" style="width: {{ budget.used_pct }}%"></span>{% if budget.adds %}<span class="bar-add bar-add--{{ budget.tone }}" style="width: {{ budget.after_pct - budget.used_pct }}%"></span>{% endif %}</div>
+            <small>{{ budget.category }} budget: {{ budget.after_label }}% used{% if budget.adds %} after this request (+{{ budget.adds }}){% endif %} of {{ budget.total }}</small>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="detail-side">
+      {% if action_form %}
+        <section class="section section--action">
+          {{ action_form }}
+        </section>
+      {% elseif waiting %}
+        <section class="section">
+          <p class="next-label">Next step</p>
+          <p class="next-text">Waiting for <strong>{{ waiting.names ?: waiting.role }}</strong>{% if waiting.names %} ({{ waiting.role }}){% endif %} to {{ waiting.task }}.</p>
+          {% for p in waiting.people %}
+            <div class="who-row"><span class="avatar sm">{{ p.initials }}</span><span><strong>{{ p.name }}</strong><small>{{ waiting.role }}</small></span></div>
+          {% endfor %}
+        </section>
+      {% endif %}
+
+      <details class="section more more--log">
+        <summary>History ({{ timeline|length }})</summary>
+        <ol class="timeline">
+          {% for l in timeline %}
+            <li><p><strong>{{ l.who.uid ? l.who.name : 'System' }}</strong> {{ l.message }}</p><small>{{ l.ago }}</small></li>
+          {% endfor %}
+        </ol>
+      </details>
+    </aside>
+  </div>
+</div>

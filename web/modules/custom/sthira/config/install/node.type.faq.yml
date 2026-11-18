@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+    - sthira
+name: Supplier FAQ
+type: faq
+description: A question suppliers ask, answered by the homepage search.
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

@@ -1,0 +1,11 @@
+<ul class="list list--table">
+  {% for q in rows %}
+    <li><a href="{{ q.url }}">
+      <span class="list-main">
+        <strong>{{ q.title }}{% if q.urgent %} <span class="tag tag--bad">Urgent</span>{% endif %}{% if q.mismatch %} <span class="tag tag--bad">Mismatch</span>{% endif %}</strong>
+        <small>{{ q.project }} · {{ q.ref }} · {{ q.by.name }} · {{ q.age }}</small>
+      </span>
+      <span class="list-side">{% if show_amount %}<span class="amount">{{ q.amount ?: '—' }}</span>{% endif %}<span class="pill pill--{{ q.tone }}">{{ q.stage }}</span></span>
+    </a></li>
+  {% endfor %}
+</ul>

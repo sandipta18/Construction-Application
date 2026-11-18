@@ -1,0 +1,31 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Roles &amp; access</h1>
+      <p class="sub">Each role does only its own steps. Project managers see only their own projects; vendors see only their own company. Money values are hidden from roles without “See ₹”.</p>
+    </div>
+    <div class="actions">{% if urls.content %}<a class="btn" href="{{ urls.content }}">Content</a>{% endif %}{% if urls.permissions %}<a class="btn" href="{{ urls.permissions }}">Permissions</a>{% endif %}</div>
+  </header>
+
+  <table class="table table--plain matrix">
+    <thead><tr><th>Role</th>{% for c in columns %}<th class="c">{{ c }}</th>{% endfor %}<th>Projects</th></tr></thead>
+    <tbody>
+      {% for role in roles %}
+        <tr>
+          <td><strong>{{ role.label }}</strong><br><small class="muted">{% for p in role.people %}{{ p.name }}{{ not loop.last ? ', ' }}{% endfor %}</small></td>
+          {% for on in role.cells %}<td class="c">{% if on %}<span class="yes">✓</span>{% else %}<span class="no">·</span>{% endif %}</td>{% endfor %}
+          <td class="muted small">{{ role.scope }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <section class="section limits">
+    <div class="section-head"><h2>Approval limit</h2></div>
+    {% if limits_form %}
+      {{ limits_form }}
+    {% else %}
+      <p>Project Manager approves up to <strong>{{ limit }}</strong>. Anything above goes to the Director.</p>
+    {% endif %}
+  </section>
+</div>

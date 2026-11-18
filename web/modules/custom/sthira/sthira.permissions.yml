@@ -1,0 +1,33 @@
+access sthira app:
+  title: 'Access the procurement app'
+view all projects:
+  title: 'See all projects'
+  description: 'Without this, people only see the projects they are a member of.'
+raise requests:
+  title: 'Raise material requests'
+approve requests:
+  title: 'Approve requests up to the PM approval limit'
+approve high value requests:
+  title: 'Approve requests above the PM approval limit'
+issue purchase orders:
+  title: 'Compare vendors and issue purchase orders'
+receive goods:
+  title: 'Record deliveries (goods receipt)'
+process invoices:
+  title: 'Check invoices and release payments'
+view finance:
+  title: 'See rates, amounts and budgets'
+  description: 'Field-level access: without it, money values are hidden.'
+view vendors:
+  title: 'View the vendor directory'
+view audit log:
+  title: 'View the audit log'
+manage sthira settings:
+  title: 'Manage approval limits'
+  restrict access: true
+approve vendors:
+  title: 'Verify and approve vendor registrations'
+access vendor portal:
+  title: 'Use the vendor portal (own company only)'
+manage search index:
+  title: 'See and rebuild the homepage search index'

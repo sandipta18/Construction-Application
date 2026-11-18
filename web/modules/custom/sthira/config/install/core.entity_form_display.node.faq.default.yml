@@ -1,0 +1,47 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - node.type.faq
+  - field.field.node.faq.field_answer
+  - field.field.node.faq.field_keywords
+  module: []
+  enforced:
+    module:
+    - sthira
+id: node.faq.default
+targetEntityType: node
+bundle: faq
+mode: default
+content:
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {}
+  field_answer:
+    type: string_textarea
+    weight: 1
+    region: content
+    settings:
+      rows: 3
+      placeholder: ''
+    third_party_settings: {}
+  field_keywords:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {}
+hidden:
+  created: true
+  promote: true
+  sticky: true
+  uid: true
+  path: true
+  status: true

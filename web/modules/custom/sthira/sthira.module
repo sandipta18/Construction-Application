@@ -1,0 +1,466 @@
+<?php
+
+/**
+ * @file
+ * Sthira procurement prototype: theme hooks and app shell data.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\sthira\Format;
+use Drupal\sthira\Icons;
+
+/**
+ * Implements hook_theme().
+ */
+function sthira_theme() {
+  $hooks = [
+    'sthira_dashboard' => ['greeting', 'subtitle', 'role', 'kpis', 'queue', 'queue_count', 'insights', 'insight_count', 'can_raise', 'urls', 'add_links', 'content_url'],
+    'sthira_requests' => ['tabs', 'rows', 'can_raise', 'urls', 'finance', 'empty'],
+    'sthira_request' => ['r', 'steps', 'action_form', 'waiting', 'reco', 'match', 'budget', 'timeline', 'finance', 'urls'],
+    'sthira_intake' => ['samples'],
+    'sthira_projects' => ['projects', 'finance', 'add_links'],
+    'sthira_project' => ['p', 'budgets', 'stock', 'requests', 'team', 'finance', 'urls'],
+    'sthira_vendors' => ['vendors', 'finance', 'add_links', 'tabs', 'view', 'can_approve'],
+    'sthira_vendor_portal' => ['v', 'approved', 'rates', 'orders', 'urls'],
+    'sthira_landing' => ['requirements', 'requirement_count', 'projects', 'categories', 'stats', 'urls', 'suggestions', 'slides'],
+    'sthira_insights' => ['insights'],
+    'sthira_access' => ['roles', 'columns', 'limits_form', 'limit', 'team', 'can_edit', 'urls'],
+    'sthira_audit' => ['logs'],
+    'sthira_search_admin' => ['summary', 'types', 'status', 'docs', 'query', 'test', 'form'],
+    'sthira_settings' => ['cards'],
+  ];
+  $out = [];
+  foreach ($hooks as $hook => $vars) {
+    $out[$hook] = ['variables' => array_fill_keys($vars, NULL)];
+  }
+  return $out;
+}
+
+/**
+ * Implements hook_preprocess().
+ *
+ * Gives every Sthira template the icon set.
+ */
+function sthira_preprocess(&$variables, $hook) {
+  if (str_starts_with($hook, 'sthira_')) {
+    $variables['icons'] = Icons::all();
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for page templates.
+ *
+ * Builds the app shell: navigation, current person, role switcher.
+ */
+function sthira_preprocess_page(&$variables) {
+  if (\Drupal::theme()->getActiveTheme()->getName() !== 'sthira_theme') {
+    return;
+  }
+  $variables['#cache']['max-age'] = 0;
+  $route = (string) \Drupal::routeMatch()->getRouteName();
+  $account = \Drupal::currentUser();
+  /** @var \Drupal\sthira\Repository $repo */
+  $repo = \Drupal::service('sthira.repository');
+  /** @var \Drupal\sthira\Workflow $workflow */
+  $workflow = \Drupal::service('sthira.workflow');
+
+  // Everyone who uses the app gets the app shell on every page, including
+  // Drupal's own content list, add/edit/delete forms and content pages.
+  $layout = 'basic';
+  $isVendor = $account->isAuthenticated() && $account->hasPermission('access vendor portal') && !$account->hasPermission('access sthira app');
+  if ($account->isAuthenticated() && ($account->hasPermission('access sthira app') || $isVendor)) {
+    $layout = 'app';
+  }
+  if (in_array($route, ['user.login', 'user.pass', 'sthira.vendor_register'], TRUE)) {
+    $layout = 'auth';
+  }
+  if ($route === 'sthira.home') {
+    $layout = 'landing';
+  }
+  $icons = Icons::all();
+  $sthira = ['layout' => $layout, 'icons' => $icons, 'today' => date('l, d F Y'), 'app_route' => str_starts_with($route, 'sthira.'), 'auth_mode' => $route === 'sthira.vendor_register' ? 'register' : 'login', 'register_url' => Url::fromRoute('sthira.vendor_register')->toString()];
+
+  if ($layout === 'auth') {
+    $people = \Drupal::state()->get('sthira.people', []);
+    $accounts = [];
+    foreach ($people as $uid => $p) {
+      if ($uid == 1) {
+        continue;
+      }
+      $accounts[] = ['username' => $p['username'] ?? '', 'name' => $p['name'], 'title' => $p['title'], 'initials' => Format::initials($p['name'])];
+    }
+    $sthira['demo_accounts'] = $accounts;
+    $sthira['demo_password'] = \Drupal\sthira\DemoData::PASSWORD;
+  }
+
+  if ($layout === 'app') {
+    $me = $repo->person((int) $account->id());
+    $sthira['user'] = $me;
+    $queueCount = count($workflow->queue($account));
+    $nav = [];
+    if ($isVendor) {
+      $nav[] = ['label' => 'My company', 'route' => 'sthira.vendor_portal', 'icon' => 'vendors', 'match' => 'entity.node.edit_form', 'match2' => 'node.add', 'match3' => 'entity.node.delete_form'];
+    }
+    else {
+      // Only the essentials. Everything else lives under Settings.
+      $nav[] = ['label' => 'Home', 'route' => 'sthira.dashboard', 'icon' => 'dashboard', 'match' => 'sthira.insights'];
+      $nav[] = ['label' => 'Requests', 'route' => 'sthira.requests', 'icon' => 'requests', 'badge' => $queueCount ?: NULL, 'match' => 'sthira.request', 'match2' => 'sthira.request_new'];
+      $nav[] = ['label' => 'Projects', 'route' => 'sthira.projects', 'icon' => 'projects', 'match' => 'sthira.project'];
+      if ($account->hasPermission('view vendors')) {
+        $pending = $account->hasPermission('approve vendors') ? count($repo->vendorsByStatus('pending')) : 0;
+        $nav[] = ['label' => 'Suppliers', 'route' => 'sthira.vendors', 'icon' => 'vendors', 'badge' => $pending ?: NULL];
+      }
+      if (sthira_has_settings($account)) {
+        $nav[] = ['label' => 'Settings', 'route' => 'sthira.settings', 'icon' => 'settings', 'match' => 'sthira.access', 'match2' => 'sthira.audit', 'match3' => 'sthira.search_admin', 'match4' => 'system.admin_content'];
+      }
+    }
+    foreach ($nav as &$item) {
+      if (isset($item['route'])) {
+        $item['url'] = Url::fromRoute($item['route'])->toString();
+        $item['active'] = in_array($route, array_filter([$item['route'], $item['match'] ?? NULL, $item['match2'] ?? NULL, $item['match3'] ?? NULL, $item['match4'] ?? NULL]), TRUE);
+        $item['icon'] = $icons[$item['icon']];
+      }
+    }
+    unset($item);
+    $sthira['nav'] = $nav;
+
+    // Demo role switcher.
+    $demoUids = $repo->demoUids();
+    if ($workflow->demoMode() && in_array((int) $account->id(), $demoUids, TRUE)) {
+      $switcher = [];
+      foreach ($demoUids as $uid) {
+        $p = $repo->person($uid);
+        $switcher[] = [
+          'name' => $p['name'],
+          'role' => $p['title'],
+          'initials' => $p['initials'],
+          'current' => $uid === (int) $account->id(),
+          'url' => Url::fromRoute('sthira.switch', ['uid' => $uid], ['query' => ['back' => \Drupal::request()->getRequestUri()]])->toString(),
+        ];
+      }
+      $sthira['switcher'] = $switcher;
+    }
+    $sthira['logout'] = Url::fromRoute('user.logout')->toString();
+  }
+  $variables['sthira'] = $sthira;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the login form.
+ */
+function sthira_form_user_login_form_alter(&$form, FormStateInterface $form_state) {
+  $form['name']['#attributes']['placeholder'] = 'e.g. director';
+  $form['name']['#description'] = '';
+  $form['pass']['#description'] = '';
+  $form['actions']['submit']['#value'] = 'Sign in';
+  $form['#submit'][] = 'sthira_login_redirect';
+}
+
+/**
+ * Sends people to the dashboard after signing in.
+ */
+function sthira_login_redirect(array &$form, FormStateInterface $form_state) {
+  $account = \Drupal::currentUser();
+  $form_state->setRedirect($account->hasPermission('access sthira app') ? 'sthira.dashboard' : ($account->hasPermission('access vendor portal') ? 'sthira.vendor_portal' : '<front>'));
+}
+
+/**
+ * Whether the current person is a vendor (portal only, no internal app).
+ */
+function sthira_is_vendor(?\Drupal\Core\Session\AccountInterface $account = NULL): bool {
+  $account = $account ?? \Drupal::currentUser();
+  return $account->hasPermission('access vendor portal') && !$account->hasPermission('access sthira app');
+}
+
+/**
+ * Bundles that get an automatic title.
+ */
+const STHIRA_AUTO_TITLE = ['material_request', 'vendor_rate', 'site_stock'];
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() for node forms.
+ *
+ * Requests, vendor rates and stock rows are titled automatically.
+ */
+function sthira_form_node_form_alter(&$form, FormStateInterface $form_state) {
+  $node = $form_state->getFormObject()->getEntity();
+  if (in_array($node->bundle(), STHIRA_AUTO_TITLE, TRUE) && isset($form['title'])) {
+    $form['title']['widget'][0]['value']['#default_value'] = $node->label() ?: 'Auto';
+    $form['title']['#access'] = FALSE;
+  }
+  if (in_array($node->bundle(), ['project', 'material', 'vendor', 'vendor_rate', 'site_stock', 'material_request', 'faq'], TRUE)) {
+    foreach (['revision_log', 'revision', 'revision_information'] as $key) {
+      if (isset($form[$key])) {
+        $form[$key]['#access'] = FALSE;
+      }
+    }
+  }
+  if (sthira_is_vendor()) {
+    $hidden = [
+      'vendor' => ['field_rating', 'field_on_time', 'field_order_count', 'field_contract_expiry', 'field_vendor_status', 'field_review_note', 'field_vendor_user'],
+      'vendor_rate' => ['field_vendor'],
+    ][$node->bundle()] ?? [];
+    foreach ($hidden as $field) {
+      if (isset($form[$field])) {
+        $form[$field]['#access'] = FALSE;
+      }
+    }
+    $form['#title'] = $node->bundle() === 'vendor_rate' ? ($node->isNew() ? t('Add a rate') : t('Edit rate')) : t('Company details');
+  }
+  if ($node->bundle() === 'material_request' && $node->isNew()) {
+    $form['#title'] = t('New material request');
+    $form['field_stage']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for nodes.
+ *
+ * Fills in what the app normally calculates, so content added through
+ * "Add content" works in the app straight away.
+ */
+function sthira_node_presave(\Drupal\node\NodeInterface $node) {
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  switch ($node->bundle()) {
+    case 'material_request':
+      $material = $node->get('field_material')->entity;
+      // New requests start at the raiser's own approval level (the field's
+      // default is 'pm_review').
+      $pickStage = $node->isNew() && in_array($node->get('field_stage')->value, [NULL, '', 'pm_review'], TRUE);
+      if ($node->get('field_priority')->isEmpty()) {
+        $node->set('field_priority', 'normal');
+      }
+      if ($node->get('field_needed_by')->isEmpty()) {
+        $node->set('field_needed_by', date('Y-m-d', strtotime('+7 days')));
+      }
+      if ($material) {
+        if ($node->get('field_unit')->isEmpty()) {
+          $node->set('field_unit', $material->get('field_unit')->value);
+        }
+        if ($node->get('field_est_rate')->isEmpty()) {
+          $node->set('field_est_rate', (int) $material->get('field_std_rate')->value);
+        }
+        if ($node->get('field_est_amount')->isEmpty()) {
+          $node->set('field_est_amount', (int) round((float) $node->get('field_qty')->value * (float) $node->get('field_est_rate')->value));
+        }
+      }
+      if ($node->get('field_ref')->isEmpty()) {
+        $count = (int) $storage->getQuery()->accessCheck(FALSE)->condition('type', 'material_request')->count()->execute();
+        $node->set('field_ref', 'MR-' . (1041 + $count));
+      }
+      if ($pickStage) {
+        $start = \Drupal::service('sthira.workflow')->startStage([
+          'project_id' => (int) $node->get('field_project')->target_id,
+          'est_amount' => (float) $node->get('field_est_amount')->value,
+        ], \Drupal::currentUser());
+        $node->set('field_stage', $start['stage']);
+        if ($start['approved_pm']) {
+          $node->set('field_approved_pm', $start['approved_pm']);
+        }
+        if ($start['approved_director']) {
+          $node->set('field_approved_director', $start['approved_director']);
+        }
+      }
+      $qty = $node->get('field_qty')->value;
+      $node->setTitle($node->get('field_ref')->value . ' · ' . Format::qty($qty) . ' ' . $node->get('field_unit')->value . ' · ' . ($material ? $material->label() : 'material'));
+      break;
+
+    case 'vendor':
+      if (sthira_is_vendor() && !$node->isNew() && $node->get('field_vendor_status')->value === 'rejected') {
+        $node->set('field_vendor_status', 'pending');
+      }
+      break;
+
+    case 'vendor_rate':
+      if (sthira_is_vendor()) {
+        $own = \Drupal::service('sthira.repository')->vendorForUser((int) \Drupal::currentUser()->id());
+        if ($own) {
+          $node->set('field_vendor', $own['id']);
+        }
+      }
+      $vendor = $node->get('field_vendor')->entity;
+      $material = $node->get('field_material')->entity;
+      $node->setTitle(($vendor ? $vendor->label() : 'Vendor') . ' · ' . ($material ? $material->label() : 'Material'));
+      break;
+
+    case 'site_stock':
+      $project = $node->get('field_project')->entity;
+      $material = $node->get('field_material')->entity;
+      $node->setTitle(($project ? $project->get('field_code')->value : 'Project') . ' · ' . ($material ? $material->label() : 'Material'));
+      break;
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert() for nodes.
+ *
+ * Requests added through Drupal's own content form are logged and routed.
+ */
+function sthira_node_insert(\Drupal\node\NodeInterface $node) {
+  sthira_search_mark($node);
+  sthira_log_vendor_change($node, TRUE);
+  if ($node->bundle() !== 'material_request' || !empty($node->sthira_internal)) {
+    return;
+  }
+  /** @var \Drupal\sthira\Repository $repo */
+  $repo = \Drupal::service('sthira.repository');
+  $r = $repo->request((int) $node->id());
+  $repo->log((int) $node->id(), (int) $node->getOwnerId(), 'created', 'Raised ' . $r['ref'] . ' through Drupal content form (est. ' . Format::inr($r['est_amount']) . ').');
+  $waiting = \Drupal::service('sthira.workflow')->waitingOn($r);
+  if ($waiting && $waiting['names']) {
+    $repo->log((int) $node->id(), 0, 'notified', 'WhatsApp alert sent to ' . $waiting['names'] . ' (' . $waiting['role'] . ') (simulated).');
+  }
+}
+
+/**
+ * Implements hook_module_preuninstall().
+ *
+ * Removes Sthira content before its content types are removed.
+ */
+function sthira_module_preuninstall($module) {
+  if ($module !== 'sthira') {
+    return;
+  }
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $ids = $storage->getQuery()->accessCheck(FALSE)
+    ->condition('type', ['project', 'material', 'vendor', 'vendor_rate', 'site_stock', 'material_request', 'faq'], 'IN')
+    ->execute();
+  foreach (array_chunk($ids, 50) as $chunk) {
+    $storage->delete($storage->loadMultiple($chunk));
+  }
+}
+
+
+/**
+ * Implements hook_ENTITY_TYPE_prepare_form() for nodes.
+ *
+ * A vendor adding a rate is always adding it for their own company.
+ */
+function sthira_node_prepare_form(\Drupal\node\NodeInterface $node, $operation, FormStateInterface $form_state) {
+  if ($node->bundle() === 'vendor_rate' && $node->isNew() && sthira_is_vendor()) {
+    $vendor = \Drupal::service('sthira.repository')->vendorForUser((int) \Drupal::currentUser()->id());
+    if ($vendor) {
+      $node->set('field_vendor', $vendor['id']);
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access() for nodes.
+ *
+ * Vendors see only their own company and rates (and the material catalog).
+ */
+function sthira_node_access(\Drupal\node\NodeInterface $node, $operation, \Drupal\Core\Session\AccountInterface $account) {
+  if (!sthira_is_vendor($account)) {
+    return \Drupal\Core\Access\AccessResult::neutral();
+  }
+  $result = \Drupal\Core\Access\AccessResult::neutral()->cachePerUser()->addCacheableDependency($node);
+  switch ($node->bundle()) {
+    case 'material':
+      return $operation === 'view' ? $result : \Drupal\Core\Access\AccessResult::forbidden()->cachePerUser();
+
+    case 'vendor':
+      return (int) $node->get('field_vendor_user')->target_id === (int) $account->id()
+        ? $result
+        : \Drupal\Core\Access\AccessResult::forbidden()->cachePerUser()->addCacheableDependency($node);
+
+    case 'vendor':
+      if (sthira_is_vendor() && !$node->isNew() && $node->get('field_vendor_status')->value === 'rejected') {
+        $node->set('field_vendor_status', 'pending');
+      }
+      break;
+
+    case 'vendor_rate':
+      if (sthira_is_vendor()) {
+        $own = \Drupal::service('sthira.repository')->vendorForUser((int) \Drupal::currentUser()->id());
+        if ($own) {
+          $node->set('field_vendor', $own['id']);
+        }
+      }
+      $vendor = $node->get('field_vendor')->entity;
+      $own = $vendor && (int) $vendor->get('field_vendor_user')->target_id === (int) $account->id();
+      return $own ? $result : \Drupal\Core\Access\AccessResult::forbidden()->cachePerUser()->addCacheableDependency($node);
+
+    default:
+      return \Drupal\Core\Access\AccessResult::forbidden()->cachePerUser();
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_create_access() for nodes.
+ *
+ * Vendors can add rates only once procurement has approved them.
+ */
+function sthira_node_create_access(\Drupal\Core\Session\AccountInterface $account, array $context, $entity_bundle) {
+  if ($entity_bundle === 'vendor_rate' && sthira_is_vendor($account)) {
+    $vendor = \Drupal::service('sthira.repository')->vendorForUser((int) $account->id());
+    return \Drupal\Core\Access\AccessResult::forbiddenIf(!$vendor || $vendor['status'] !== 'approved')->setCacheMaxAge(0);
+  }
+  return \Drupal\Core\Access\AccessResult::neutral();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for nodes.
+ */
+function sthira_node_update(\Drupal\node\NodeInterface $node) {
+  sthira_search_mark($node);
+  sthira_log_vendor_change($node, FALSE);
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function sthira_node_delete(\Drupal\node\NodeInterface $node) {
+  sthira_search_mark($node);
+}
+
+/**
+ * Refreshes the homepage search index after content that feeds it changes.
+ */
+function sthira_search_mark(\Drupal\node\NodeInterface $node) {
+  // The service may be missing while the module is being updated or removed.
+  if (in_array($node->bundle(), ['project', 'material', 'material_request', 'faq', 'vendor'], TRUE) && \Drupal::hasService('sthira.search_index')) {
+    \Drupal::service('sthira.search_index')->markDirty();
+  }
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Keeps the search index fresh and adds vectors once the local model is up.
+ */
+function sthira_cron() {
+  if (!\Drupal::hasService('sthira.search_index')) {
+    return;
+  }
+  $index = \Drupal::service('sthira.search_index');
+  $index->isDirty() ? $index->rebuild() : $index->embedMissing();
+}
+
+/**
+ * Logs vendor-side changes so procurement sees them in the audit log.
+ */
+function sthira_log_vendor_change(\Drupal\node\NodeInterface $node, bool $new) {
+  if (!sthira_is_vendor() || !in_array($node->bundle(), ['vendor', 'vendor_rate'], TRUE)) {
+    return;
+  }
+  /** @var \Drupal\sthira\Repository $repo */
+  $repo = \Drupal::service('sthira.repository');
+  $uid = (int) \Drupal::currentUser()->id();
+  if ($node->bundle() === 'vendor_rate') {
+    $material = $node->get('field_material')->entity;
+    $vendor = $node->get('field_vendor')->entity;
+    $repo->log(0, $uid, 'vendor_rate', ($vendor ? $vendor->label() : 'Vendor') . ($new ? ' added a rate for ' : ' updated its rate for ') . ($material ? $material->label() : 'a material') . ': ' . Format::inr($node->get('field_rate')->value) . ', ' . (int) $node->get('field_lead_days')->value . ' days lead time.');
+  }
+  else {
+    $repo->log(0, $uid, 'vendor_profile', $node->label() . ' updated its company details' . ($node->get('field_vendor_status')->value === 'pending' ? ' and resubmitted for verification.' : '.'));
+  }
+}
+
+/**
+ * Whether the account sees the Settings page (Director and Procurement).
+ */
+function sthira_has_settings(\Drupal\Core\Session\AccountInterface $account): bool {
+  return $account->hasPermission('view audit log') || $account->hasPermission('access content overview') || $account->hasPermission('manage search index');
+}

@@ -1,0 +1,70 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - node.type.material
+  - field.field.node.material.field_category
+  - field.field.node.material.field_unit
+  - field.field.node.material.field_std_rate
+  - field.field.node.material.field_keywords
+  - field.field.node.material.field_description
+  module:
+  - options
+  enforced:
+    module:
+    - sthira
+id: node.material.default
+targetEntityType: node
+bundle: material
+mode: default
+content:
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {}
+  field_category:
+    type: options_select
+    weight: 1
+    region: content
+    settings: {}
+    third_party_settings: {}
+  field_unit:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings: &id001
+      size: 60
+      placeholder: ''
+    third_party_settings: {}
+  field_std_rate:
+    type: number
+    weight: 3
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {}
+  field_keywords:
+    type: string_textfield
+    weight: 4
+    region: content
+    settings: *id001
+    third_party_settings: {}
+  field_description:
+    type: string_textarea
+    weight: 5
+    region: content
+    settings:
+      rows: 3
+      placeholder: ''
+    third_party_settings: {}
+hidden:
+  created: true
+  promote: true
+  sticky: true
+  uid: true
+  path: true
+  status: true

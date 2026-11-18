@@ -1,0 +1,86 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">Administration</div>
+      <h1><span class="ai-tag ai-tag--lg">AI</span> Search index</h1>
+      <p class="sub">The homepage search reads from this index. It is built from projects, open requirements, materials, categories and the supplier FAQ, and refreshes itself whenever that content is saved. Public information only: no prices, budgets or vendor data.</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-label">Documents indexed</span>
+      <span class="stat-value">{{ summary.total }}</span>
+      <span class="stat-sub">{% for t in types %}{{ t.count }} {{ t.label|lower }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Ranking</span>
+      {% set hybrid = summary.vectors and status.ok %}
+      <span class="stat-value si-mode">{{ hybrid ? 'Hybrid' : 'Keyword + concepts' }}</span>
+      <span class="stat-sub">{% if hybrid %}BM25 keywords fused with {{ summary.dimensions }}-dimension vectors from {{ status.model }}{% else %}BM25 keywords, synonyms, typo fixing and intent rules{% endif %}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Vectors</span>
+      <span class="stat-value">{{ summary.vectors }}<small class="si-of"> / {{ summary.total }}</small></span>
+      <span class="stat-sub">Last built {{ summary.built_label }}</span>
+    </div>
+  </div>
+
+  <section class="si-model {{ status.ok ? 'si-model--ok' : 'si-model--off' }}">
+    <div>
+      <h2><span class="si-dot"></span>Local embedding model: {{ status.model }}</h2>
+      <p>{{ status.message }}</p>
+      {% if not status.ok and status.enabled %}
+        <p class="muted">Optional. To turn on meaning-based search, run once in the project folder:<br>
+          <code>ddev restart</code> then <code>ddev exec -s ollama ollama pull {{ status.model }}</code> then <code>ddev drush sthira:search-reindex</code></p>
+      {% endif %}
+      <p class="muted si-small">Runs on this machine through Ollama at <code>{{ status.url }}</code>. No external service or API key.</p>
+    </div>
+    <div class="si-actions">{{ form }}</div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Try a query</h2></div>
+    <form method="get" class="si-try">
+      <input type="search" name="q" value="{{ query }}" placeholder="e.g. active projects, rebar near mumbai, cemnt in pune" aria-label="Query">
+      <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+    {% if test %}
+      <div class="si-result">
+        <div class="si-chips">
+          {% for c in test.understood %}<span class="pill pill--violet"><b>{{ c.label }}:</b> {{ c.value }}</span>{% endfor %}
+          <span class="pill">{{ test.mode == 'hybrid' ? 'Hybrid' : 'Keyword' }} · {{ test.took_ms }} ms</span>
+        </div>
+        {% if test.answer %}
+          <h3>{{ test.answer.title }}</h3>
+          <p>{{ test.answer.text }}</p>
+          {% if test.answer.extra %}<p class="muted">{{ test.answer.extra }}</p>{% endif %}
+        {% else %}
+          <p class="muted">No answer.</p>
+        {% endif %}
+        <table class="table table--plain si-rank">
+          <thead><tr><th>Ranked document</th><th>Type</th><th class="num">BM25</th><th class="num">Vector</th><th class="num">Fused</th></tr></thead>
+          <tbody>
+            {% for r in test.ranking %}
+              <tr><td>{{ r.title }}</td><td class="muted">{{ r.type }}</td><td class="num">{{ r.bm25 }}</td><td class="num">{{ r.vector ?? '–' }}</td><td class="num"><b>{{ r.score }}</b></td></tr>
+            {% else %}
+              <tr><td colspan="5" class="muted">No document matched.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Documents</h2></div>
+    <table class="table table--plain">
+      <thead><tr><th>Type</th><th>Document</th><th class="num">Terms</th><th>Vector</th></tr></thead>
+      <tbody>
+        {% for d in docs %}
+          <tr><td class="muted nowrap">{{ d.type }}</td><td><b>{{ d.title }}</b><br><span class="muted si-small">{{ d.body }}</span></td><td class="num">{{ d.terms }}</td><td>{% if d.vector %}<span class="pill pill--ok">Yes</span>{% else %}<span class="pill">No</span>{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>

@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_std_rate
+  - node.type.material
+  enforced:
+    module:
+    - sthira
+id: node.material.field_std_rate
+field_name: field_std_rate
+entity_type: node
+bundle: material
+label: Standard rate (₹ per unit)
+description: Budget rate used for estimates.
+required: true
+translatable: false
+default_value: []
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

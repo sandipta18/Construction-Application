@@ -1,0 +1,23 @@
+sthira.settings:
+  type: config_object
+  label: 'Sthira settings'
+  mapping:
+    pm_limit:
+      type: integer
+      label: 'Project manager approval limit (INR)'
+    demo_mode:
+      type: boolean
+      label: 'Demo mode (role switcher, simulated notifications)'
+    search:
+      type: mapping
+      label: 'Homepage search'
+      mapping:
+        embeddings:
+          type: string
+          label: 'Vector embeddings: auto (use Ollama when reachable) or off'
+        ollama_url:
+          type: string
+          label: 'Ollama URL'
+        model:
+          type: string
+          label: 'Embedding model'

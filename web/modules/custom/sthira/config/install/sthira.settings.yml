@@ -1,0 +1,6 @@
+pm_limit: 50000
+demo_mode: true
+search:
+  embeddings: auto
+  ollama_url: 'http://ollama:11434'
+  model: nomic-embed-text

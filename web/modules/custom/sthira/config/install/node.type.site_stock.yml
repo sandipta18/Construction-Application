@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+    - sthira
+name: Site stock
+type: site_stock
+description: Stock on hand of one material at one project site.
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

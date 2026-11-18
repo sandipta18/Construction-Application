@@ -1,0 +1,125 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - node.type.material_request
+  - field.field.node.material_request.field_ref
+  - field.field.node.material_request.field_project
+  - field.field.node.material_request.field_material
+  - field.field.node.material_request.field_qty
+  - field.field.node.material_request.field_needed_by
+  - field.field.node.material_request.field_priority
+  - field.field.node.material_request.field_note
+  - field.field.node.material_request.field_stage
+  - field.field.node.material_request.field_unit
+  - field.field.node.material_request.field_est_rate
+  - field.field.node.material_request.field_est_amount
+  - field.field.node.material_request.field_raw_text
+  - field.field.node.material_request.field_rejected_stage
+  - field.field.node.material_request.field_approved_pm
+  - field.field.node.material_request.field_approved_director
+  - field.field.node.material_request.field_vendor
+  - field.field.node.material_request.field_po_number
+  - field.field.node.material_request.field_po_rate
+  - field.field.node.material_request.field_po_amount
+  - field.field.node.material_request.field_po_date
+  - field.field.node.material_request.field_received_qty
+  - field.field.node.material_request.field_grn_date
+  - field.field.node.material_request.field_invoice_no
+  - field.field.node.material_request.field_invoice_qty
+  - field.field.node.material_request.field_invoice_amount
+  - field.field.node.material_request.field_match_status
+  - field.field.node.material_request.field_paid_amount
+  - field.field.node.material_request.field_paid_date
+  module:
+  - datetime
+  - options
+  enforced:
+    module:
+    - sthira
+id: node.material_request.default
+targetEntityType: node
+bundle: material_request
+mode: default
+content:
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {}
+  field_project:
+    type: options_select
+    weight: 2
+    region: content
+    settings: &id001 {}
+    third_party_settings: {}
+  field_material:
+    type: options_select
+    weight: 3
+    region: content
+    settings: *id001
+    third_party_settings: {}
+  field_qty:
+    type: number
+    weight: 4
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {}
+  field_needed_by:
+    type: datetime_default
+    weight: 5
+    region: content
+    settings: {}
+    third_party_settings: {}
+  field_priority:
+    type: options_select
+    weight: 6
+    region: content
+    settings: &id002 {}
+    third_party_settings: {}
+  field_note:
+    type: string_textarea
+    weight: 7
+    region: content
+    settings:
+      rows: 3
+      placeholder: ''
+    third_party_settings: {}
+  field_stage:
+    type: options_select
+    weight: 8
+    region: content
+    settings: *id002
+    third_party_settings: {}
+hidden:
+  created: true
+  promote: true
+  sticky: true
+  uid: true
+  path: true
+  status: true
+  field_ref: true
+  field_unit: true
+  field_est_rate: true
+  field_est_amount: true
+  field_raw_text: true
+  field_rejected_stage: true
+  field_approved_pm: true
+  field_approved_director: true
+  field_vendor: true
+  field_po_number: true
+  field_po_rate: true
+  field_po_amount: true
+  field_po_date: true
+  field_received_qty: true
+  field_grn_date: true
+  field_invoice_no: true
+  field_invoice_qty: true
+  field_invoice_amount: true
+  field_match_status: true
+  field_paid_amount: true
+  field_paid_date: true

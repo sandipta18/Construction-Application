@@ -1,0 +1,11 @@
+<ul class="activity">
+  {% for l in activity %}
+    <li>
+      {% if l.who.uid %}<span class="avatar sm">{{ l.who.initials }}</span>{% else %}<span class="avatar sm avatar--bot">{{ icons.bell }}</span>{% endif %}
+      <div class="activity-body">
+        <p><strong>{{ l.who.uid ? l.who.name : 'System' }}</strong> <span class="pill pill--{{ l.tone }} pill--xs">{{ l.action }}</span> {{ l.message }}</p>
+        <small>{{ l.ago }}{% if l.ref %} · <a href="{{ l.url }}">{{ l.ref }}</a>{% endif %}</small>
+      </div>
+    </li>
+  {% endfor %}
+</ul>

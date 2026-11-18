@@ -1,0 +1,48 @@
+<div class="page">
+  <header class="page-head">
+    <div><h1>Suppliers</h1><p class="sub">Suppliers sign up on the website. Procurement checks and approves them before they can get orders.</p></div>
+    {% if add_links %}<div class="actions">{% for l in add_links %}<a class="btn{{ loop.first ? ' btn-primary' }}" href="{{ l.url }}">+ {{ l.label }}</a>{% endfor %}</div>{% endif %}
+  </header>
+  <nav class="tabs">
+    {% for t in tabs %}<a href="{{ t.url }}" class="tab{{ t.active ? ' is-active' }}">{{ t.label }} <span class="tab-count">{{ t.count }}</span></a>{% endfor %}
+  </nav>
+
+  {% if view == 'approved' %}
+    <table class="table table--plain">
+      <thead><tr><th>Supplier</th><th>Supplies</th><th class="nowrap">On time</th><th>Rating</th>{% if finance %}<th class="num">Spend</th>{% endif %}<th>Price agreement</th></tr></thead>
+      <tbody>
+        {% for v in vendors %}
+          <tr>
+            <td><strong>{{ v.name }}</strong><br><small class="muted">{{ v.city }}{% if v.has_login %} · has a login{% endif %}</small></td>
+            <td class="muted">{{ v.categories|join(', ') }}</td>
+            <td><span class="t-{{ v.on_time_tone }}">{{ v.on_time }}%</span></td>
+            <td class="nowrap">{{ v.rating }} ★</td>
+            {% if finance %}<td class="num">{{ v.spend }}</td>{% endif %}
+            <td>{% if v.contract_tone != 'neutral' %}<span class="pill pill--warn">Ends in {{ v.contract_days }} days</span>{% else %}<span class="muted">{{ v.contract }}</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {% for v in vendors %}
+      <section class="section vendor-card">
+        <div class="section-head">
+          <div><h2>{{ v.name }}</h2><p class="muted small">{{ v.city }} · registered {{ v.registered }}</p></div>
+          <span class="pill pill--{{ view == 'pending' ? 'warn' : 'bad' }}">{{ view == 'pending' ? 'Waiting for approval' : 'Not approved' }}</span>
+        </div>
+        <dl class="facts">
+          <div><dt>Contact</dt><dd>{{ v.contact }}<br><span class="muted small">{{ v.phone }}</span></dd></div>
+          <div><dt>GSTIN</dt><dd>{{ v.gstin ?: '—' }}</dd></div>
+          <div><dt>PAN</dt><dd>{{ v.pan ?: '—' }}</dd></div>
+          <div><dt>Supplies</dt><dd>{{ v.categories|join(', ') }}</dd></div>
+          <div><dt>Bank details</dt><dd>{{ v.bank ?: '—' }}</dd></div>
+          <div><dt>Documents</dt><dd>{% for d in v.documents %}<a class="link" href="{{ d.url }}" target="_blank">{{ d.name }}</a><br>{% else %}<span class="muted">None uploaded</span>{% endfor %}</dd></div>
+        </dl>
+        {% if v.note %}<p class="note">Note: {{ v.note }}</p>{% endif %}
+        {% if v.review_form %}<div class="review">{{ v.review_form }}</div>{% elseif view == 'pending' %}<p class="muted small review">Waiting for the Procurement Officer to approve.</p>{% endif %}
+      </section>
+    {% else %}
+      <p class="empty">{{ view == 'pending' ? 'No new suppliers waiting.' : 'No suppliers turned down.' }}</p>
+    {% endfor %}
+  {% endif %}
+</div>

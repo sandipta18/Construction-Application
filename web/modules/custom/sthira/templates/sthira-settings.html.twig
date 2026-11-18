@@ -1,0 +1,14 @@
+<div class="page">
+  <header class="page-head">
+    <div><h1>Settings</h1><p class="sub">Less-used pages for running the system.</p></div>
+  </header>
+  <div class="settings-grid">
+    {% for c in cards %}
+      <a class="settings-card" href="{{ c.url }}">
+        <span class="settings-icon">{{ c.icon }}</span>
+        <strong>{{ c.title }}</strong>
+        <span>{{ c.text }}</span>
+      </a>
+    {% endfor %}
+  </div>
+</div>

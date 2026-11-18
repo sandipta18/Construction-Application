@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_needed_by
+  - node.type.material_request
+  module:
+  - datetime
+  enforced:
+    module:
+    - sthira
+id: node.material_request.field_needed_by
+field_name: field_needed_by
+entity_type: node
+bundle: material_request
+label: Needed by
+description: ''
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings: {}
+field_type: datetime

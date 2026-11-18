@@ -1,0 +1,124 @@
+sthira.home:
+  path: '/home'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::home'
+    _title: 'Supply to Infra Radar'
+  requirements:
+    _access: 'TRUE'
+sthira.dashboard:
+  path: '/app'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::dashboard'
+    _title: 'Home'
+  requirements:
+    _permission: 'access sthira app'
+sthira.requests:
+  path: '/app/requests'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::requests'
+    _title: 'Requests'
+  requirements:
+    _permission: 'access sthira app'
+sthira.request_new:
+  path: '/app/requests/new'
+  defaults:
+    _form: '\Drupal\sthira\Form\RequestForm'
+    _title: 'New request'
+  requirements:
+    _permission: 'raise requests'
+sthira.request:
+  path: '/app/requests/{id}'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::request'
+    _title: 'Request'
+  requirements:
+    _permission: 'access sthira app'
+    id: '\d+'
+sthira.projects:
+  path: '/app/projects'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::projects'
+    _title: 'Projects'
+  requirements:
+    _permission: 'access sthira app'
+sthira.project:
+  path: '/app/projects/{id}'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::project'
+    _title: 'Project'
+  requirements:
+    _permission: 'access sthira app'
+    id: '\d+'
+sthira.vendors:
+  path: '/app/vendors'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::vendors'
+    _title: 'Suppliers'
+  requirements:
+    _permission: 'view vendors'
+sthira.insights:
+  path: '/app/insights'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::insights'
+    _title: 'Assistant tips'
+  requirements:
+    _permission: 'access sthira app'
+sthira.access:
+  path: '/app/access'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::access'
+    _title: 'Roles & access'
+  requirements:
+    _permission: 'access sthira app'
+sthira.audit:
+  path: '/app/audit'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::audit'
+    _title: 'History'
+  requirements:
+    _permission: 'view audit log'
+sthira.search_api:
+  path: '/api/search'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\SearchController::api'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE
+sthira.search_admin:
+  path: '/app/search-index'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\SearchController::admin'
+    _title: 'Search index'
+  requirements:
+    _permission: 'manage search index'
+sthira.settings:
+  path: '/app/settings'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::settings'
+    _title: 'Settings'
+  requirements:
+    _permission: 'access sthira app'
+sthira.switch:
+  path: '/app/switch/{uid}'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AppController::switchUser'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+    uid: '\d+'
+sthira.vendor_register:
+  path: '/supplier/register'
+  defaults:
+    _form: '\Drupal\sthira\Form\VendorRegisterForm'
+    _title: 'Register as a supplier'
+  requirements:
+    _access: 'TRUE'
+sthira.vendor_portal:
+  path: '/supplier'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\VendorController::portal'
+    _title: 'My company'
+  requirements:
+    _permission: 'access vendor portal'

@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_daily_use
+  - node.type.site_stock
+  enforced:
+    module:
+    - sthira
+id: node.site_stock.field_daily_use
+field_name: field_daily_use
+entity_type: node
+bundle: site_stock
+label: Daily usage
+description: ''
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

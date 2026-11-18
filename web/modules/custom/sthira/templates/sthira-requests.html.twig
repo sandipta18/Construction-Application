@@ -1,0 +1,16 @@
+<div class="page">
+  <header class="page-head">
+    <div><h1>Requests</h1></div>
+    {% if can_raise %}<a class="btn btn-primary" href="{{ urls.new }}">New request</a>{% endif %}
+  </header>
+  <nav class="tabs">
+    {% for t in tabs %}
+      <a href="{{ t.url }}" class="tab{{ t.active ? ' is-active' }}">{{ t.label }} <span class="tab-count">{{ t.count }}</span></a>
+    {% endfor %}
+  </nav>
+  {% if rows %}
+    {% include '@sthira/sthira-request-table.html.twig' with { rows: rows, show_amount: true } %}
+  {% else %}
+    <p class="empty">{{ empty }}</p>
+  {% endif %}
+</div>

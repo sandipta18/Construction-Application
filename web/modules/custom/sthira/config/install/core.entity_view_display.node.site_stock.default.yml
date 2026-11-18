@@ -1,0 +1,58 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - node.type.site_stock
+  - field.field.node.site_stock.field_project
+  - field.field.node.site_stock.field_material
+  - field.field.node.site_stock.field_stock_qty
+  - field.field.node.site_stock.field_daily_use
+  module:
+  - user
+  enforced:
+    module:
+    - sthira
+id: node.site_stock.default
+targetEntityType: node
+bundle: site_stock
+mode: default
+content:
+  field_project:
+    type: entity_reference_label
+    label: inline
+    settings: &id001
+      link: true
+    third_party_settings: {}
+    weight: 1
+    region: content
+  field_material:
+    type: entity_reference_label
+    label: inline
+    settings: *id001
+    third_party_settings: {}
+    weight: 2
+    region: content
+  field_stock_qty:
+    type: number_decimal
+    label: inline
+    settings: &id002
+      thousand_separator: ','
+      decimal_separator: .
+      scale: 1
+      prefix_suffix: true
+    third_party_settings: {}
+    weight: 3
+    region: content
+  field_daily_use:
+    type: number_decimal
+    label: inline
+    settings: *id002
+    third_party_settings: {}
+    weight: 4
+    region: content
+  links:
+    settings: {}
+    third_party_settings: {}
+    weight: 100
+    region: content
+hidden: {}

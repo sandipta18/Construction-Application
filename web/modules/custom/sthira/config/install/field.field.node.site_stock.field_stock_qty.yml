@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_stock_qty
+  - node.type.site_stock
+  enforced:
+    module:
+    - sthira
+id: node.site_stock.field_stock_qty
+field_name: field_stock_qty
+entity_type: node
+bundle: site_stock
+label: Quantity on hand
+description: ''
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

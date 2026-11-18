@@ -1,0 +1,39 @@
+langcode: en
+status: true
+dependencies:
+  module:
+  - node
+  - options
+  enforced:
+    module:
+    - sthira
+id: node.field_stage
+field_name: field_stage
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+  - value: pm_review
+    label: Awaiting PM approval
+  - value: director_review
+    label: Awaiting Director approval
+  - value: approved
+    label: Approved, awaiting PO
+  - value: ordered
+    label: PO issued
+  - value: received
+    label: Delivered
+  - value: invoiced
+    label: Invoice checked
+  - value: paid
+    label: Paid
+  - value: rejected
+    label: Rejected
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {}
+persist_with_no_fields: false
+custom_storage: false

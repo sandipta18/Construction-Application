@@ -1,0 +1,14 @@
+{#
+/**
+ * @file
+ * Fields on Drupal's own content pages: label on the left, value on the right.
+ */
+#}
+{% if label_hidden %}
+  {% for item in items %}<div{{ attributes.addClass('field-plain') }}>{{ item.content }}</div>{% endfor %}
+{% else %}
+  <div{{ attributes.addClass('field-row') }}>
+    <div class="field-label">{{ label }}</div>
+    <div class="field-value">{% for item in items %}<div>{{ item.content }}</div>{% endfor %}</div>
+  </div>
+{% endif %}

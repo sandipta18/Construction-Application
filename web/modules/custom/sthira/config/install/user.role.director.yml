@@ -1,0 +1,60 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.project
+    - node.type.material
+    - node.type.vendor
+    - node.type.vendor_rate
+    - node.type.site_stock
+    - node.type.material_request
+    - node.type.faq
+  module:
+    - node
+    - sthira
+id: director
+label: 'Director'
+weight: 3
+is_admin: false
+permissions:
+  - 'access sthira app'
+  - 'view all projects'
+  - 'raise requests'
+  - 'approve requests'
+  - 'approve high value requests'
+  - 'issue purchase orders'
+  - 'receive goods'
+  - 'process invoices'
+  - 'view finance'
+  - 'view vendors'
+  - 'view audit log'
+  - 'manage search index'
+  - 'manage sthira settings'
+  - 'access content'
+  - 'access content overview'
+  - 'view own unpublished content'
+  - 'create project content'
+  - 'edit any project content'
+  - 'edit own project content'
+  - 'delete any project content'
+  - 'delete own project content'
+  - 'create faq content'
+  - 'edit any faq content'
+  - 'edit own faq content'
+  - 'delete any faq content'
+  - 'delete own faq content'
+  - 'create material content'
+  - 'edit any material content'
+  - 'edit own material content'
+  - 'delete any material content'
+  - 'delete own material content'
+  - 'create site_stock content'
+  - 'edit any site_stock content'
+  - 'edit own site_stock content'
+  - 'delete any site_stock content'
+  - 'delete own site_stock content'
+  - 'create material_request content'
+  - 'edit any material_request content'
+  - 'edit own material_request content'
+  - 'delete any material_request content'
+  - 'delete own material_request content'

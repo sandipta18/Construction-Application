@@ -1,0 +1,31 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_material
+  - node.type.site_stock
+  - node.type.material
+  enforced:
+    module:
+    - sthira
+id: node.site_stock.field_material
+field_name: field_material
+entity_type: node
+bundle: site_stock
+label: Material
+description: ''
+required: true
+translatable: false
+default_value: []
+default_value_callback: ''
+settings:
+  handler: default:node
+  handler_settings:
+    target_bundles:
+      material: material
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

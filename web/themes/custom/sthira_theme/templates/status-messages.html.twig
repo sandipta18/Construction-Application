@@ -1,0 +1,17 @@
+{#
+/**
+ * @file
+ * Status messages, styled as toasts at the top of the content.
+ */
+#}
+<div data-drupal-messages>
+{% for type, messages in message_list %}
+  <div role="{{ type == 'error' ? 'alert' : 'status' }}" class="messages messages--{{ type }}">
+    {% if messages|length > 1 %}
+      <ul>{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+    {% else %}
+      {{ messages|first }}
+    {% endif %}
+  </div>
+{% endfor %}
+</div>

@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+    - sthira
+name: Supplier price
+type: vendor_rate
+description: A supplier's price and delivery time for one material.
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

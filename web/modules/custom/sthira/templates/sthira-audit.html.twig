@@ -1,0 +1,27 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">Administration</div>
+      <h1>History</h1>
+      <p class="sub">Who did what, and when. Includes approvals, purchase orders, deliveries, payments, AI-recommendation overrides and setting changes.</p>
+    </div>
+  </div>
+  <section class="card card--flush">
+    <div class="table-wrap">
+      <table class="table audit">
+        <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th><th>Request</th></tr></thead>
+        <tbody>
+          {% for l in logs %}
+            <tr>
+              <td class="muted nowrap" title="{{ l.time }}">{{ l.time }}</td>
+              <td>{% if l.who.uid %}<span class="who"><span class="avatar xs">{{ l.who.initials }}</span>{{ l.who.name }}</span>{% else %}<span class="who"><span class="avatar xs avatar--bot">{{ icons.bell }}</span>System</span>{% endif %}</td>
+              <td><span class="pill pill--{{ l.tone }}">{{ l.action }}</span></td>
+              <td>{{ l.message }}</td>
+              <td>{% if l.ref %}<a href="{{ l.url }}">{{ l.ref }}</a>{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+    - sthira
+name: Supplier
+type: vendor
+description: A supplier company, with its delivery record and price agreement.
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

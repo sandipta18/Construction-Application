@@ -1,0 +1,38 @@
+<div class="page">
+  <div class="crumbs"><a class="back" href="{{ urls.projects }}">← Projects</a>{% if urls.edit %}<a class="drupal-link" href="{{ urls.edit }}">Edit details</a>{% endif %}</div>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ p.code }} · {{ p.location }} · {{ p.client }}</p>
+      <h1>{{ p.name }}</h1>
+      <p class="sub">{{ p.phase }} · {{ p.progress }}% complete · Team: {% for m in team %}{{ m.name }}{{ not loop.last ? ', ' }}{% endfor %}</p>
+    </div>
+    {% if p.committed %}<div class="head-amount"><small>Spent of {{ p.material_budget }}</small><strong>{{ p.committed }}</strong></div>{% endif %}
+  </header>
+
+  <div class="two-col">
+    {% if finance %}
+      <section class="section">
+        <div class="section-head"><h2>Budget by material</h2></div>
+        <ul class="meters">
+          {% for b in budgets %}
+            <li><span class="meter-label">{{ b.category }}</span><span class="bar"><span class="bar-fill bar-fill--{{ b.tone }}" style="width: {{ b.width }}%"></span></span><span class="meter-value t-{{ b.tone }}">{{ b.pct }}%</span></li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+    <section class="section">
+      <div class="section-head"><h2>Stock at site</h2><span class="muted small">days left</span></div>
+      <ul class="meters">
+        {% for s in stock %}
+          <li><span class="meter-label">{{ s.item }}</span><span class="bar"><span class="bar-fill bar-fill--{{ s.tone }}" style="width: {{ s.width }}%"></span></span><span class="meter-value t-{{ s.tone }}">{{ s.days is not null ? s.days : '—' }}</span>
+          {% if s.reorder %}<a class="tag tag--ai" href="{{ s.reorder }}">Reorder</a>{% elseif s.open %}<span class="tag">On order</span>{% endif %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+
+  <section>
+    <div class="section-head"><h2>Requests</h2></div>
+    {% include '@sthira/sthira-request-table.html.twig' with { rows: requests, show_amount: finance } %}
+  </section>
+</div>

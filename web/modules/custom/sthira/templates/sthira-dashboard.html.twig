@@ -1,0 +1,53 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>{{ greeting }}</h1>
+      <p class="sub">{{ subtitle }}</p>
+    </div>
+    {% if can_raise %}<a class="btn btn-primary" href="{{ urls.new }}">New request</a>{% endif %}
+  </header>
+
+  <div class="stats">
+    {% for k in kpis %}
+      <div class="stat">
+        <span class="stat-label">{{ k.label }}</span>
+        <span class="stat-value"{% if k.count is not null %} data-count="{{ k.count }}"{% endif %}>{{ k.value }}</span>
+        <span class="stat-sub">{{ k.sub }}</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <section class="section">
+    <div class="section-head"><h2>Your to-do list {% if queue_count %}<span class="count">{{ queue_count }}</span>{% endif %}</h2>{% if queue_count > 5 %}<a href="{{ urls.requests }}" class="link">See all</a>{% endif %}</div>
+    {% if queue %}
+      <ul class="list list--todo">
+        {% for q in queue %}
+          <li><a href="{{ q.url }}">
+            <span class="list-main"><strong>{{ q.title }}</strong><small>{{ q.project }}{% if q.amount %} · {{ q.amount }}{% endif %}</small></span>
+            <span class="list-side"><span class="btn btn-sm btn-todo">{{ q.action }} →</span></span>
+          </a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">You're all caught up. Nothing to do right now.</p>
+    {% endif %}
+  </section>
+
+  {% if add_links %}
+    <section class="section">
+      <div class="section-head"><h2>Add new</h2>{% if content_url %}<a href="{{ content_url }}" class="link">See all</a>{% endif %}</div>
+      <div class="add-links">
+        {% for l in add_links %}<a class="add-link" href="{{ l.url }}"><span>+</span> {{ l.label }}</a>{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="section">
+    <div class="section-head"><h2><span class="ai-tag">AI</span> Tips from the assistant</h2>{% if insight_count > 3 %}<a href="{{ urls.insights }}" class="link">All {{ insight_count }} tips</a>{% endif %}</div>
+    {% if insights %}
+      {% include '@sthira/sthira-insight-list.html.twig' with { insights: insights } %}
+    {% else %}
+      <p class="empty">Nothing to worry about right now.</p>
+    {% endif %}
+  </section>
+</div>

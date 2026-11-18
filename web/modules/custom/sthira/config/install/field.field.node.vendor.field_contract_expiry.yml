@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - field.storage.node.field_contract_expiry
+  - node.type.vendor
+  module:
+  - datetime
+  enforced:
+    module:
+    - sthira
+id: node.vendor.field_contract_expiry
+field_name: field_contract_expiry
+entity_type: node
+bundle: vendor
+label: Rate contract ends
+description: ''
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings: {}
+field_type: datetime

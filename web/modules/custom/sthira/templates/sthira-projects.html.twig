@@ -1,0 +1,14 @@
+<div class="page">
+  <header class="page-head"><div><h1>Projects</h1></div>{% if add_links %}<div class="actions">{% for l in add_links %}<a class="btn{{ loop.first ? ' btn-primary' }}" href="{{ l.url }}">+ {{ l.label }}</a>{% endfor %}</div>{% endif %}</header>
+  <ul class="list">
+    {% for p in projects %}
+      <li><a href="{{ p.url }}" class="project-item">
+        <span class="list-main"><strong>{{ p.name }}</strong><small>{{ p.code }} · {{ p.location }} · {{ p.phase }}</small></span>
+        <span class="progress"><span class="bar"><span class="bar-fill" style="width: {{ p.progress }}%"></span></span><small>{{ p.progress }}% built</small></span>
+        {% if finance %}<span class="progress"><span class="bar"><span class="bar-fill bar-fill--{{ p.tone }}" style="width: {{ min(p.pct, 100) }}%"></span></span><small>{{ p.pct }}% of budget</small></span>{% endif %}
+      </a></li>
+    {% else %}
+      <li class="empty">You are not on any project yet.</li>
+    {% endfor %}
+  </ul>
+</div>

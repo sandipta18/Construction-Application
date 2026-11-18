@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.vendor
+    - node.type.vendor_rate
+  module:
+    - node
+    - sthira
+id: vendor
+label: 'Vendor'
+weight: 8
+is_admin: false
+permissions:
+  - 'access vendor portal'
+  - 'edit own vendor content'
+  - 'create vendor_rate content'
+  - 'edit own vendor_rate content'
+  - 'delete own vendor_rate content'

@@ -1,0 +1,38 @@
+langcode: en
+status: true
+dependencies:
+  config:
+  - node.type.faq
+  - field.field.node.faq.field_answer
+  - field.field.node.faq.field_keywords
+  module:
+  - user
+  enforced:
+    module:
+    - sthira
+id: node.faq.default
+targetEntityType: node
+bundle: faq
+mode: default
+content:
+  field_answer:
+    type: basic_string
+    label: inline
+    settings: {}
+    third_party_settings: {}
+    weight: 1
+    region: content
+  field_keywords:
+    type: string
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {}
+    weight: 2
+    region: content
+  links:
+    settings: {}
+    third_party_settings: {}
+    weight: 100
+    region: content
+hidden: {}

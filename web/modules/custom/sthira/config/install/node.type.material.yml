@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+    - sthira
+name: Material
+type: material
+description: An item in the material catalog.
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

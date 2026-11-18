@@ -1,0 +1,16 @@
+intake:
+  version: 1.0
+  js:
+    js/intake.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+landing:
+  version: 1.0
+  js:
+    js/landing.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once

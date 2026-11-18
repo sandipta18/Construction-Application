@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  module:
+  - node
+  - options
+  enforced:
+    module:
+    - sthira
+id: node.field_priority
+field_name: field_priority
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+  - value: normal
+    label: Normal
+  - value: urgent
+    label: Urgent
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {}
+persist_with_no_fields: false
+custom_storage: false

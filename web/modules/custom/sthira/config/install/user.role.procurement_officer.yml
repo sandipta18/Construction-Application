@@ -1,0 +1,38 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.vendor
+    - node.type.vendor_rate
+    - node.type.material
+    - node.type.faq
+  module:
+    - node
+    - sthira
+id: procurement_officer
+label: 'Procurement Officer'
+weight: 6
+is_admin: false
+permissions:
+  - 'access sthira app'
+  - 'view all projects'
+  - 'issue purchase orders'
+  - 'approve vendors'
+  - 'process invoices'
+  - 'view audit log'
+  - 'manage search index'
+  - 'view finance'
+  - 'view vendors'
+  - 'access content overview'
+  - 'create vendor content'
+  - 'edit any vendor content'
+  - 'create vendor_rate content'
+  - 'edit any vendor_rate content'
+  - 'create faq content'
+  - 'edit any faq content'
+  - 'edit own faq content'
+  - 'delete any faq content'
+  - 'delete own faq content'
+  - 'create material content'
+  - 'edit any material content'
+  - 'delete any vendor_rate content'
