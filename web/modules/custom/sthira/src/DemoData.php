@@ -46,6 +46,86 @@ class DemoData {
     ['Who do I contact about an order?', 'Your purchase order names the procurement officer handling it. You can also see every order and its delivery and payment status in your vendor portal.', 'contact, support, help, phone, email, order status, purchase order, po'],
   ];
 
+  /**
+   * More projects, so every project manager runs two or three sites.
+   * code, name, city, client, contract value, progress %, phase, start, end,
+   * about, material budgets, team (logins), stock (material name => [qty, daily use]).
+   */
+  const MORE_PROJECTS = [
+    4 => ['P-104', 'Orchid Heights Villas', 'Nashik', 'Orchid Homes LLP', 15500000, 24, 'Plinth & ground-floor walls', '2026-06-01', '2027-11-30',
+      'A gated community of 48 row villas with a clubhouse and internal roads on Gangapur Road, Nashik, Maharashtra. Load-bearing brick walls with RCC slabs.',
+      ['Steel' => 1200000, 'Cement' => 900000, 'Bricks & Blocks' => 800000, 'Finishing' => 600000, 'Aggregates' => 400000, 'Plumbing' => 300000, 'Electrical' => 300000],
+      ['pm3'],
+      ['OPC 53 Grade Cement' => [160, 25], 'Red Clay Bricks' => [9000, 1800], 'M-Sand' => [18, 3]]],
+    5 => ['P-105', 'Eastern Metro Depot', 'Kolkata', 'Kolkata Metro Rail Corporation', 36000000, 47, 'Inspection sheds · steel structure', '2025-11-20', '2027-09-30',
+      'A maintenance depot for metro trains with inspection pits, a train washing plant and a stabling yard in New Town, Kolkata, West Bengal. Heavy steel sheds on deep RCC foundations.',
+      ['Steel' => 5200000, 'Cement' => 1500000, 'Electrical' => 1100000, 'Aggregates' => 900000, 'Plumbing' => 400000],
+      ['pm2'],
+      ['TMT Steel Bars Fe500D' => [11, 1.4], 'OPC 53 Grade Cement' => [220, 35], 'Coarse Aggregate (20 millimetres)' => [40, 6]]],
+    6 => ['P-106', 'Harbour View Business Park', 'Thane', 'Harbour Realty', 31000000, 15, 'Excavation & foundation', '2026-08-10', '2028-03-31',
+      'Two 12-storey office towers with a shared food court and three basement levels of parking near Ghodbunder Road, Thane, Maharashtra. Post-tensioned slabs with glass façades.',
+      ['Steel' => 4500000, 'Cement' => 1600000, 'Finishing' => 1500000, 'Electrical' => 900000, 'Aggregates' => 800000, 'Bricks & Blocks' => 500000, 'Plumbing' => 500000],
+      ['pm', 'pm3'],
+      ['OPC 53 Grade Cement' => [300, 50], 'TMT Steel Bars Fe500D' => [7, 1.1], 'Coarse Aggregate (20 millimetres)' => [25, 8]]],
+    7 => ['P-107', 'Sunrise Public School Campus', 'Pune', 'Sunrise Education Society', 12500000, 70, 'Brickwork & plastering', '2025-12-01', '2027-03-31',
+      'A school campus with 40 classrooms, science labs, a library and an indoor sports hall in Wakad, Pune, Maharashtra. Three-storey RCC blocks with brick infill walls.',
+      ['Steel' => 900000, 'Cement' => 700000, 'Finishing' => 700000, 'Bricks & Blocks' => 600000, 'Electrical' => 400000, 'Plumbing' => 250000],
+      ['pm2'],
+      ['Red Clay Bricks' => [6000, 1500], 'Vitrified Tiles (600 × 600 millimetres)' => [1200, 200], 'Exterior Emulsion Paint (20 litres)' => [8, 2]]],
+  ];
+
+  /**
+   * Field values for one of MORE_PROJECTS.
+   */
+  public static function projectFields(array $p, array $uids): array {
+    $catKey = array_flip(Repository::CATEGORIES);
+    $fields = [
+      'field_code' => $p[0], 'field_location' => $p[2], 'field_client' => $p[3], 'field_contract_value' => $p[4],
+      'field_progress' => $p[5], 'field_phase' => $p[6], 'field_start_date' => $p[7], 'field_end_date' => $p[8],
+      'field_description' => $p[9],
+      'field_team' => array_values(array_filter(array_map(fn($n) => isset($uids[$n]) ? ['target_id' => $uids[$n]] : NULL, $p[11]))),
+    ];
+    foreach ($p[10] as $cat => $amount) {
+      $fields['field_budget_' . $catKey[$cat]] = $amount;
+    }
+    return $fields;
+  }
+
+  /**
+   * Adds MORE_PROJECTS (and their site stock) to a site that does not have
+   * them yet. Existing data is not touched. Returns the names added.
+   */
+  public static function addMoreProjects(): array {
+    $nodes = \Drupal::entityTypeManager()->getStorage('node');
+    $users = \Drupal::entityTypeManager()->getStorage('user');
+    $uids = [];
+    foreach ($users->loadByProperties(['name' => ['pm', 'pm2', 'pm3']]) as $u) {
+      $uids[$u->getAccountName()] = (int) $u->id();
+    }
+    $added = [];
+    foreach (self::MORE_PROJECTS as $p) {
+      if ($nodes->loadByProperties(['type' => 'project', 'field_code' => $p[0]]) || $nodes->loadByProperties(['type' => 'project', 'title' => $p[1]])) {
+        continue;
+      }
+      $node = $nodes->create(['type' => 'project', 'title' => $p[1], 'uid' => 1, 'status' => 1] + self::projectFields($p, $uids));
+      $node->sthira_internal = TRUE;
+      $node->save();
+      foreach ($p[12] as $material => [$qty, $use]) {
+        $m = $nodes->loadByProperties(['type' => 'material', 'title' => $material]);
+        if ($m) {
+          $s = $nodes->create(['type' => 'site_stock', 'title' => $p[0] . ' · ' . $material, 'uid' => 1, 'status' => 1, 'field_project' => $node->id(), 'field_material' => reset($m)->id(), 'field_stock_qty' => $qty, 'field_daily_use' => $use]);
+          $s->sthira_internal = TRUE;
+          $s->save();
+        }
+      }
+      $added[] = $p[0] . ' ' . $p[1];
+    }
+    if ($added) {
+      \Drupal::service('sthira.repository')->reset();
+    }
+    return $added;
+  }
+
   public static function seed(Repository $repo, Connection $db, StateInterface $state): void {
     $uids = self::users($state);
     $now = time();
@@ -78,7 +158,7 @@ class DemoData {
     ];
     $members = [
       1 => ['pm'],
-      2 => ['pm'],
+      2 => ['pm', 'pm3'],
       3 => ['pm2'],
     ];
     $P = [];
@@ -93,6 +173,10 @@ class DemoData {
         $fields['field_budget_' . $catKey[$cat]] = $amount;
       }
       $P[$id] = $make('project', $p[1], $fields);
+    }
+    foreach (self::MORE_PROJECTS as $id => $p) {
+      $projects[$id] = array_slice($p, 0, 9);
+      $P[$id] = $make('project', $p[1], self::projectFields($p, $uids));
     }
 
     // Catalog.
@@ -130,11 +214,23 @@ class DemoData {
       8 => ['AquaFlow Pipes & Fittings', 'Thane', 'Plumbing', 4.2, 84, 15, 95, 'Joseph D\'Souza'],
       9 => ['Prism Tiles & Paints', 'Kolkata', 'Finishing', 4.4, 87, 20, 70, 'Ritika Bose'],
       10 => ['National Cement Depot', 'Kolkata', 'Cement, Bricks & Blocks', 3.8, 68, 12, 40, 'Amit Ghosh'],
+      // More suppliers, so every material type has three to bid.
+      11 => ['Shakti Steel Traders', 'Pune', 'Steel', 4.2, 89, 23, 80, 'Pradeep Jadhav'],
+      12 => ['Ganga Stone Crushers', 'Bhiwandi', 'Aggregates', 4.1, 85, 18, 110, 'Imran Shaikh'],
+      13 => ['Laxmi Bricks & Blocks', 'Pune', 'Bricks & Blocks', 4.0, 83, 16, 75, 'Sneha Pawar'],
+      14 => ['Voltline Cables & Wires', 'Pune', 'Electrical', 4.4, 91, 27, 130, 'Arvind Menon'],
+      15 => ['Shree Ganesh Electricals', 'Kolkata', 'Electrical', 3.9, 78, 11, 50, 'Subhajit Das'],
+      16 => ['Neer Pipes & Sanitation', 'Pune', 'Plumbing', 4.3, 90, 21, 140, 'Harsh Agarwal'],
+      17 => ['Sagar Plumbing Supplies', 'Kolkata', 'Plumbing', 4.0, 82, 13, 65, 'Moumita Sen'],
+      18 => ['Rangoli Paints & Tiles', 'Pune', 'Finishing', 4.2, 86, 19, 100, 'Pooja Deshmukh'],
+      19 => ['Marbleline Tiles & Stone', 'Mumbai', 'Finishing', 4.5, 93, 25, 160, 'Nikhil Shah'],
     ];
     // Each supplier's login.
     $logins = [
       1 => $uids['balaji'], 2 => $uids['deccan'], 3 => $uids['konark'], 4 => $uids['mahalaxmi'], 5 => $uids['sai'],
       6 => $uids['ecoblock'], 7 => $uids['brightline'], 8 => $uids['aquaflow'], 9 => $uids['prism'], 10 => $uids['national'],
+      11 => $uids['shakti'], 12 => $uids['ganga'], 13 => $uids['laxmi'], 14 => $uids['voltline'], 15 => $uids['ganesh'],
+      16 => $uids['neer'], 17 => $uids['sagar'], 18 => $uids['rangoli'], 19 => $uids['marbleline'],
     ];
     $V = [];
     foreach ($vendors as $id => $v) {
@@ -144,7 +240,7 @@ class DemoData {
         'field_rating' => $v[3], 'field_on_time' => $v[4], 'field_order_count' => $v[5],
         'field_contract_expiry' => $d($v[6]), 'field_contact' => $v[7],
         'field_gstin' => 'DEMO-GST-' . str_pad((string) $id, 3, '0', STR_PAD_LEFT),
-        'field_phone' => '+91 90000 000' . str_pad((string) $id, 2, '0', STR_PAD_LEFT),
+        'field_phone' => '+91 90000 00' . str_pad((string) (100 + $id), 3, '0', STR_PAD_LEFT),
         'field_pan' => 'DEMOP' . str_pad((string) $id, 4, '0', STR_PAD_LEFT) . 'X',
         'field_vendor_status' => 'approved',
       ] + (isset($logins[$id]) ? ['field_vendor_user' => $logins[$id]] : []), $logins[$id] ?? 1);
@@ -180,6 +276,12 @@ class DemoData {
       [8, 8, 385, 4],
       [9, 9, 47, 6],
       [9, 10, 6150, 4],
+      [11, 2, 62400, 5],
+      [12, 3, 1520, 3], [12, 4, 1310, 2],
+      [13, 5, 58, 4], [13, 6, 9, 3],
+      [14, 7, 2120, 2], [15, 7, 2240, 4],
+      [16, 8, 392, 3], [17, 8, 378, 5],
+      [18, 9, 49, 5], [18, 10, 6250, 3], [19, 9, 45, 7], [19, 10, 6300, 5],
     ];
     foreach ($quotes as $q) {
       $make('vendor_rate', $vendors[$q[0]][0] . ' · ' . $items[$q[1]][0], ['field_vendor' => $V[$q[0]], 'field_material' => $I[$q[1]], 'field_rate' => $q[2], 'field_lead_days' => $q[3]], $logins[$q[0]] ?? 1);
@@ -191,6 +293,15 @@ class DemoData {
       [2, 1, 340, 30], [2, 2, 9, 0.9], [2, 4, 20, 6], [2, 5, 1500, 250],
       [3, 1, 90, 12], [3, 7, 6, 1.5], [3, 8, 30, 6], [3, 9, 900, 120], [3, 10, 14, 2],
     ];
+    foreach (self::MORE_PROJECTS as $pid => $p) {
+      foreach ($p[12] as $material => [$qty, $use]) {
+        foreach ($items as $iid => $it) {
+          if ($it[0] === $material) {
+            $stock[] = [$pid, $iid, $qty, $use];
+          }
+        }
+      }
+    }
     foreach ($stock as $s) {
       $make('site_stock', $projects[$s[0]][0] . ' · ' . $items[$s[1]][0], ['field_project' => $P[$s[0]], 'field_material' => $I[$s[1]], 'field_stock_qty' => $s[2], 'field_daily_use' => $s[3]]);
     }
@@ -235,12 +346,26 @@ class DemoData {
       [1, 5, 8000, 'approved', NULL, NULL, 46, ['note' => 'Blockwork for floors 6 to 8.']],
       [3, 7, 15, 'approved', NULL, NULL, 50, ['note' => 'Second-floor ward wiring.', 'by' => 'pm2']],
       [1, 3, 20, 'approved', NULL, NULL, 5, ['raw' => 'Need 20 cubic metres of sand at Skyline by Thursday for plastering']],
+      // The newer projects.
+      [5, 2, 30, 'paid', 3, 62100, 64 * 24, ['by' => 'pm2']],
+      [4, 6, 30000, 'paid', 6, 8.5, 70 * 24, ['by' => 'pm3']],
+      [7, 6, 25000, 'paid', 13, 8.6, 55 * 24, ['by' => 'pm2']],
+      [4, 1, 400, 'paid', 2, 396, 44 * 24, ['by' => 'pm3']],
+      [5, 4, 120, 'paid', 12, 1290, 26 * 24, ['by' => 'pm2']],
+      [6, 1, 900, 'paid', 1, 401, 20 * 24, ['by' => 'pm3']],
+      [7, 10, 20, 'invoiced', 18, 6200, 5 * 24, ['by' => 'pm2']],
+      [5, 2, 18, 'ordered', 11, 62300, 3 * 24, ['by' => 'pm2']],
+      [7, 9, 3000, 'received', 19, 46, 2 * 24, ['by' => 'pm2']],
+      // Waiting for Rohit (who raised it) to approve the winning bid.
+      [6, 2, 24, 'order_review', 3, 63100, 30, ['by' => 'pm3', 'note' => 'Basement raft, tower A.']],
+      [6, 4, 150, 'approved', NULL, NULL, 12, ['note' => 'PCC bed for basement level 3.']],
+      [4, 1, 350, 'approved', NULL, NULL, 8, ['by' => 'pm3', 'note' => 'Ground-floor slab for villa rows A and B.']],
     ];
     usort($requests, fn($a, $b) => $b[6] <=> $a[6]);
 
     $settings = \Drupal::config('sthira.settings');
     $limit = 0;
-    $pmFor = [1 => $uids['pm'], 2 => $uids['pm'], 3 => $uids['pm2']];
+    $pmFor = [1 => $uids['pm'], 2 => $uids['pm'], 3 => $uids['pm2'], 4 => $uids['pm3'], 5 => $uids['pm2'], 6 => $uids['pm'], 7 => $uids['pm2']];
     $loginFor = $logins;
     $rateCard = [];
     foreach ($quotes as $q) {
@@ -312,7 +437,7 @@ class DemoData {
         'created_by' => $by,
         'created' => $t,
         'updated' => max($events),
-        'approved_pm' => $pmFor[$pid],
+        'approved_pm' => $by,
       ];
       if (isset($events['bids_invited'])) {
         $values['invited'] = array_map(fn($vid) => $V[$vid], $invited);
@@ -348,11 +473,11 @@ class DemoData {
       }
 
       $rid = $repo->createRequest($values);
-      $ref = 'MR-' . (1040 + $rid);
+      $ref = $repo->request($rid)['ref'] ?? ('MR-' . (1040 + $rid));
       $short = trim(explode('–', $projects[$pid][1])[0]);
       $unit = $item[2];
       $repo->log($rid, $by, 'created', 'Raised ' . $ref . ': ' . Format::qty($qty) . ' ' . $unit . ' of ' . $item[0] . ' for ' . $short . ' (est. ' . Format::inr($estAmount) . ')' . (!empty($opt['raw']) ? ' using AI assist' : '') . '.', $t);
-      $repo->log($rid, $pmFor[$pid], 'pm_approved', 'Approved on raising: raised by the project manager.', $events['pm_approved']);
+      $repo->log($rid, $by, 'pm_approved', 'Approved on raising: raised by the project manager.', $events['pm_approved']);
 
       if (isset($events['bids_invited'])) {
         $names = array_map(fn($vid) => $vendors[$vid][0], $invited);
@@ -416,7 +541,9 @@ class DemoData {
       'director' => ['Rajesh Mehta', 'Director', 'director'],
       'pm' => ['Ananya Sharma', 'Project Manager', 'project_manager'],
       'pm2' => ['Vikram Rao', 'Project Manager', 'project_manager'],
+      'pm3' => ['Rohit Verma', 'Project Manager', 'project_manager'],
       'procurement' => ['Neha Kapoor', 'Procurement Officer', 'procurement_officer'],
+      'procurement2' => ['Kiran Desai', 'Procurement Officer', 'procurement_officer'],
       // Every supplier has a login, so any material can be bid on.
       'balaji' => ['Mahesh Joshi', 'Shree Balaji Cement · cement', 'vendor'],
       'deccan' => ['Sunil Patil', 'Deccan Building Materials · cement, aggregates', 'vendor'],
@@ -428,6 +555,15 @@ class DemoData {
       'aquaflow' => ['Joseph D\'Souza', 'AquaFlow Pipes & Fittings · pipes', 'vendor'],
       'prism' => ['Ritika Bose', 'Prism Tiles & Paints · tiles, paint', 'vendor'],
       'national' => ['Amit Ghosh', 'National Cement Depot · cement, bricks', 'vendor'],
+      'shakti' => ['Pradeep Jadhav', 'Shakti Steel Traders · steel', 'vendor'],
+      'ganga' => ['Imran Shaikh', 'Ganga Stone Crushers · sand, aggregates', 'vendor'],
+      'laxmi' => ['Sneha Pawar', 'Laxmi Bricks & Blocks · blocks, bricks', 'vendor'],
+      'voltline' => ['Arvind Menon', 'Voltline Cables & Wires · wire', 'vendor'],
+      'ganesh' => ['Subhajit Das', 'Shree Ganesh Electricals · wire', 'vendor'],
+      'neer' => ['Harsh Agarwal', 'Neer Pipes & Sanitation · pipes', 'vendor'],
+      'sagar' => ['Moumita Sen', 'Sagar Plumbing Supplies · pipes', 'vendor'],
+      'rangoli' => ['Pooja Deshmukh', 'Rangoli Paints & Tiles · tiles, paint', 'vendor'],
+      'marbleline' => ['Nikhil Shah', 'Marbleline Tiles & Stone · tiles, paint', 'vendor'],
       'sunrise' => ['Kavita Iyer', 'Sunrise Steel Traders · waiting for approval', 'vendor'],
     ];
     // Accounts from earlier versions of the demo (6 and 5 roles).
@@ -457,6 +593,7 @@ class DemoData {
     }
     $state->set('sthira.people', $info);
     $state->set('sthira.demo_uids', array_values($uids));
+    \Drupal::service('sthira.repository')->syncPeople();
     return $uids;
   }
 

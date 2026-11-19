@@ -15,6 +15,7 @@ use Drupal\sthira\Icons;
  */
 function sthira_theme() {
   $hooks = [
+    'sthira_ask_data' => ['q', 'result', 'table', 'examples', 'next', 'bars', 'views', 'ai', 'action'],
     'sthira_director_dashboard' => ['greeting', 'o', 'insights', 'insight_count', 'activity', 'urls'],
     'sthira_dashboard' => ['greeting', 'subtitle', 'role', 'kpis', 'queue', 'queue_count', 'insights', 'insight_count', 'can_raise', 'urls', 'add_links', 'content_url'],
     'sthira_requests' => ['tabs', 'rows', 'can_raise', 'urls', 'finance', 'empty'],
@@ -120,6 +121,9 @@ function sthira_preprocess_page(&$variables) {
       if ($account->hasPermission('view vendors')) {
         $pending = $account->hasPermission('approve vendors') ? count($repo->vendorsByStatus('pending')) : 0;
         $nav[] = ['label' => 'Suppliers', 'route' => 'sthira.vendors', 'icon' => 'vendors', 'badge' => $pending ?: NULL];
+      }
+      if ($account->hasPermission('ask the data')) {
+        $nav[] = ['label' => 'Ask the data', 'route' => 'sthira.ask_data', 'icon' => 'data'];
       }
       if (sthira_has_settings($account)) {
         $nav[] = ['label' => 'Settings', 'route' => 'sthira.settings', 'icon' => 'settings', 'match' => 'sthira.access', 'match2' => 'sthira.audit', 'match3' => 'sthira.search_admin', 'match4' => 'system.admin_content'];
@@ -371,6 +375,10 @@ function sthira_node_insert(\Drupal\node\NodeInterface $node) {
 function sthira_module_preuninstall($module) {
   if ($module !== 'sthira') {
     return;
+  }
+  // The SQL views read field tables that are about to go.
+  if (\Drupal::hasService('sthira.data_views')) {
+    \Drupal::service('sthira.data_views')->drop();
   }
   $storage = \Drupal::entityTypeManager()->getStorage('node');
   $ids = $storage->getQuery()->accessCheck(FALSE)

@@ -25,6 +25,8 @@ view audit log:
   title: 'View the audit log'
 view director dashboard:
   title: 'See the director overview with charts'
+ask the data:
+  title: 'Ask the data: plain-English questions turned into SQL'
 manage sthira settings:
   title: 'Manage approval limits'
   restrict access: true

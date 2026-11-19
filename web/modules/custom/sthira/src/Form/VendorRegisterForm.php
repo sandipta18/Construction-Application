@@ -123,6 +123,7 @@ class VendorRegisterForm extends FormBase {
     $people = $state->get('sthira.people', []);
     $people[(int) $account->id()] = ['name' => $person, 'title' => 'Vendor', 'username' => $account->getAccountName()];
     $state->set('sthira.people', $people);
+    \Drupal::service('sthira.repository')->syncPeople();
 
     $files = [];
     foreach ((array) $form_state->getValue('documents') as $fid) {

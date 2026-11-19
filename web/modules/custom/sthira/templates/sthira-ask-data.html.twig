@@ -1,0 +1,128 @@
+{#
+  Ask the data: a plain-English request, the answer, and the SQL behind it.
+#}
+<div class="page askd">
+  <header class="page-head">
+    <div>
+      <h1>Ask the data</h1>
+      <p class="sub">Type what you want to know in plain English. It is turned into an SQL query, run on our database, and you see both the answer and the query.</p>
+    </div>
+  </header>
+
+  <form class="section askd-form" method="get" action="{{ action }}" role="search">
+    <label class="askd-label" for="askd-q">Your question</label>
+    <div class="askd-row">
+      <input id="askd-q" class="askd-input" type="text" name="q" value="{{ q }}" maxlength="300" autocomplete="off" placeholder="e.g. total spend per project last 90 days" {% if not q %}autofocus{% endif %}>
+      <button type="submit" class="btn btn-primary">Run query</button>
+    </div>
+    <div class="askd-examples">
+      <span>Try:</span>
+      {% for e in examples %}<a class="chip" href="{{ e.url }}">{{ e.text }}</a>{% endfor %}
+    </div>
+  </form>
+
+  {% if result %}
+    <section class="section askd-result">
+      <div class="askd-head">
+        <div>
+          <p class="askd-question">“{{ result.prompt }}”</p>
+          {% if result.explain %}<p class="askd-explain">{{ result.explain }}</p>{% endif %}
+        </div>
+        <div class="askd-meta">
+          {% if result.source == 'rules' %}
+            <span class="pill pill--ok">Built-in rules</span>
+          {% elseif result.source == 'ai' %}
+            <span class="pill pill--violet">Local AI · {{ ai.model }}</span>
+          {% endif %}
+          {% if not result.error %}<span class="askd-count">{{ result.count }} row{{ result.count == 1 ? '' : 's' }} · {{ result.ms }} ms</span>{% endif %}
+        </div>
+      </div>
+
+      {% if result.answer %}
+        <div class="askd-answer">
+          {% if result.headline %}<p class="askd-big">{{ result.headline }}</p>{% endif %}
+          <p class="askd-say">{{ result.answer }}</p>
+          {% if bars %}
+            <ul class="askd-bars" aria-label="Breakdown by {{ result.breakdown.label }}">
+              {% for b in bars %}
+                <li><a href="{{ b.url }}" title="Ask about {{ b.label }}">
+                  <span class="askd-bar-label">{{ b.label }}</span>
+                  <span class="askd-bar-track"><span class="askd-bar-fill" style="width: {{ b.pct }}%"></span></span>
+                  <span class="askd-bar-value">{{ b.value }}</span>
+                </a></li>
+              {% endfor %}
+            </ul>
+            <p class="askd-hint">Click a bar to ask about it.</p>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if result.sql %}
+        <details class="askd-sql"{% if result.error %} open{% endif %}>
+          <summary><span>Show SQL query</span>{% if result.breakdown %} <small>2 queries</small>{% endif %}</summary>
+          <div class="askd-sql-body">
+            <pre><code data-askd-sql>{{ result.sql }}</code></pre>
+            <button type="button" class="btn btn-ghost askd-copy" data-askd-copy>Copy query</button>
+          </div>
+          {% if result.breakdown %}
+            <p class="askd-sql-sub">Breakdown by {{ result.breakdown.label }}</p>
+            <div class="askd-sql-body">
+              <pre><code data-askd-sql>{{ result.breakdown.sql }}</code></pre>
+              <button type="button" class="btn btn-ghost askd-copy" data-askd-copy>Copy query</button>
+            </div>
+          {% endif %}
+        </details>
+      {% endif %}
+
+      {% if result.error %}
+        <div class="notice notice--bad askd-error">
+          <strong>{{ result.error }}</strong>
+          {% if result.note %}<p>{{ result.note }}</p>{% endif %}
+        </div>
+      {% elseif table and table.rows %}
+        <div class="askd-table-wrap">
+          <table class="table askd-table">
+            <thead><tr>{% for c in table.columns %}<th class="{{ table.num[loop.index0] ? 'num' : '' }}">{{ c }}</th>{% endfor %}</tr></thead>
+            <tbody>
+              {% for row in table.rows %}
+                <tr>{% for cell in row %}<td class="{{ cell.num ? 'num' : '' }}{{ cell.empty ? ' empty' : '' }}">{{ cell.text }}</td>{% endfor %}</tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if result.count >= 200 %}<p class="askd-foot">Showing the first 200 rows.</p>{% endif %}
+      {% else %}
+        <p class="askd-empty">No rows matched this question.</p>
+      {% endif %}
+
+      {% if next %}
+        <div class="askd-next">
+          <span>Ask next:</span>
+          {% for e in next %}<a class="chip" href="{{ e.url }}">{{ e.text }}</a>{% endfor %}
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <details class="section askd-views">
+    <summary><span>Tables you can ask about</span> <small>{{ views|length }} views</small></summary>
+    <p class="askd-views-lead">Drupal keeps every field in its own table, so these SQL views join them into simple tables with readable column names. Queries only ever read these views.</p>
+    <div class="askd-views-grid">
+      {% for v in views %}
+        <div class="askd-view">
+          <code class="askd-view-name">{{ v.name }}</code>
+          <p>{{ v.about }}</p>
+          <ul>
+            {% for col, about in v.columns %}<li><code>{{ col }}</code> <span>{{ about }}</span></li>{% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    </div>
+  </details>
+
+  <p class="askd-how">
+    Common questions are answered by built-in rules. Anything else goes to a small AI model running on our own server ({{ ai.model }}),
+    {% if ai.on %}<strong class="askd-on">which is on</strong>{% else %}<strong class="askd-off">which is off</strong>: switch it on with <code>ddev exec -s ollama ollama pull {{ ai.model }}</code>{% endif %}.
+    Every query is checked before it runs: one SELECT, only the views above, at most 200 rows. Nothing can be changed from this page.
+  </p>
+</div>

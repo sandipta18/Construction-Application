@@ -79,6 +79,25 @@ class Repository {
 
   protected array $memo = [];
 
+  /**
+   * Copies display names and titles into sthira_people (read by v_people).
+   */
+  public function syncPeople(): void {
+    try {
+      $this->db->delete('sthira_people')->execute();
+      foreach ((array) $this->state->get('sthira.people', []) as $uid => $p) {
+        $this->db->insert('sthira_people')->fields([
+          'uid' => (int) $uid,
+          'full_name' => mb_substr((string) ($p['name'] ?? ''), 0, 128),
+          'title' => mb_substr((string) ($p['title'] ?? ''), 0, 255),
+        ])->execute();
+      }
+    }
+    catch (\Throwable $e) {
+      // Table missing on an old install: v_people shows usernames only.
+    }
+  }
+
   public function __construct(
     protected Connection $db,
     protected StateInterface $state,

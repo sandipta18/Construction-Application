@@ -22,3 +22,11 @@ overview:
   dependencies:
     - core/drupal
     - core/once
+
+askdata:
+  version: VERSION
+  js:
+    js/askdata.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

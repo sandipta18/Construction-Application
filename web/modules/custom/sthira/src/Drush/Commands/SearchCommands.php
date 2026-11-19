@@ -64,4 +64,39 @@ final class SearchCommands extends DrushCommands {
     $this->io()->table(['Document', 'Type', 'BM25', 'Vector', 'Score'], array_map(fn($x) => [$x['title'], $x['type'], $x['bm25'], $x['vector'] ?? '-', $x['score']], array_slice($r['ranking'], 0, 8)));
   }
 
+
+  /**
+   * Turns a plain-English question into SQL, runs it and prints both.
+   */
+  #[CLI\Command(name: 'sthira:ask', aliases: ['sthira-ask'])]
+  #[CLI\Argument(name: 'question', description: 'What you want to know, in plain English.')]
+  public function askData(string $question): void {
+    $r = \Drupal::service('sthira.data_ask')->ask($question);
+    $this->io()->title($r['prompt']);
+    if ($r['explain']) {
+      $this->io()->writeln($r['explain'] . ($r['source'] ? ' (' . ($r['source'] === 'ai' ? 'local AI' : 'built-in rules') . ')' : ''));
+    }
+    if ($r['sql']) {
+      $this->io()->section('SQL');
+      $this->io()->writeln($r['sql']);
+    }
+    if ($r['error']) {
+      $this->io()->error(trim($r['error'] . ' ' . ($r['note'] ?? '')));
+      return;
+    }
+    $this->io()->section($r['count'] . ' rows');
+    if ($r['rows']) {
+      $this->io()->table($r['columns'], array_map('array_values', array_slice($r['rows'], 0, 50)));
+    }
+  }
+
+  /**
+   * Rebuilds the SQL views used by "Ask the data" (v_requests, v_bids, ...).
+   */
+  #[CLI\Command(name: 'sthira:data-views', aliases: ['sthira-data-views'])]
+  public function dataViews(): void {
+    \Drupal::service('sthira.data_views')->rebuild();
+    $this->io()->success('Views rebuilt: ' . implode(', ', array_keys(\Drupal\sthira\Data\DataViews::catalog())) . '.');
+  }
+
 }

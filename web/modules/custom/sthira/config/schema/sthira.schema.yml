@@ -21,3 +21,6 @@ sthira.settings:
         model:
           type: string
           label: 'Embedding model'
+        sql_model:
+          type: string
+          label: 'Local model that writes SQL for Ask the data'

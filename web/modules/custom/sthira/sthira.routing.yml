@@ -92,6 +92,15 @@ sthira.audit:
     _title: 'History'
   requirements:
     _permission: 'view audit log'
+sthira.ask_data:
+  path: '/app/ask-data'
+  defaults:
+    _controller: '\Drupal\sthira\Controller\AskDataController::page'
+    _title: 'Ask the data'
+  requirements:
+    _permission: 'ask the data'
+  options:
+    no_cache: TRUE
 sthira.search_api:
   path: '/api/search'
   defaults:

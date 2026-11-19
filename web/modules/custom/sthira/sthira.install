@@ -52,6 +52,15 @@ function sthira_schema() {
     'primary key' => ['id'],
     'indexes' => ['type' => ['type']],
   ];
+  $schema['sthira_people'] = [
+    'description' => 'Display names and job titles of users, so SQL can read them (v_people).',
+    'fields' => [
+      'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'full_name' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => ''],
+      'title' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''],
+    ],
+    'primary key' => ['uid'],
+  ];
   return $schema;
 }
 
@@ -123,6 +132,14 @@ function sthira_install($is_syncing) {
 
   // Build the search index now (with vectors if the local model is running).
   \Drupal::service('sthira.search_index')->rebuild();
+
+  // Plain SQL views for "Ask the data".
+  try {
+    \Drupal::service('sthira.data_views')->rebuild();
+  }
+  catch (\Throwable $e) {
+    // The page rebuilds them on first use.
+  }
 }
 
 /**
@@ -150,4 +167,12 @@ function sthira_uninstall($is_syncing) {
       $role->delete();
     }
   }
+}
+
+/**
+ * Adds four more demo projects so every project manager has two or three.
+ */
+function sthira_update_10031() {
+  $added = \Drupal\sthira\DemoData::addMoreProjects();
+  return $added ? 'Added projects: ' . implode(', ', $added) . '.' : 'The extra projects were already there.';
 }

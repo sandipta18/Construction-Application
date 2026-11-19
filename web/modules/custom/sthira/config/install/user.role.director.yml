@@ -23,6 +23,7 @@ permissions:
   - 'view vendors'
   - 'view audit log'
   - 'view director dashboard'
+  - 'ask the data'
   - 'manage search index'
   - 'manage sthira settings'
   - 'access content'

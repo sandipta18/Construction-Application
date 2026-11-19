@@ -22,6 +22,12 @@ services:
   sthira.answer:
     class: Drupal\sthira\Search\AnswerComposer
     arguments: ['@sthira.search', '@sthira.search_index', '@sthira.repository']
+  sthira.data_views:
+    class: Drupal\sthira\Data\DataViews
+    arguments: ['@database']
+  sthira.data_ask:
+    class: Drupal\sthira\Data\DataAsk
+    arguments: ['@database', '@sthira.data_views', '@sthira.repository', '@config.factory', '@http_client']
   sthira.bidding:
     class: Drupal\sthira\Bidding
     arguments: ['@sthira.repository', '@sthira.workflow', '@sthira.assistant']
